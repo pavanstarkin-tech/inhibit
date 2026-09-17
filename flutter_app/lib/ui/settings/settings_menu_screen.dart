@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/services/app_state.dart';
 import '../../core/services/native_shield_service.dart';
+import '../../core/services/update_service.dart';
 import '../components/neo_card.dart';
 import '../theme/app_theme.dart';
 
@@ -58,6 +59,17 @@ class SettingsMenuScreen extends StatelessWidget {
               const SizedBox(height: 24),
 
               // Menu Options (Only System, About, & Policy settings - no duplicate bottom nav items)
+              _buildMenuItem(
+                icon: Icons.system_update_alt_rounded,
+                iconBg: AppTheme.accentYellow,
+                title: 'Check for Updates',
+                badgeText: appState.isCheckingForUpdates
+                    ? 'Checking...'
+                    : (appState.availableUpdate != null ? 'NEW V${appState.availableUpdate!.latestVersion}' : 'GitHub Release'),
+                onTap: () => _handleCheckForUpdates(context),
+              ),
+              const SizedBox(height: 12),
+
               _buildMenuItem(
                 icon: Icons.settings_accessibility_rounded,
                 iconBg: AppTheme.accentGreen,
@@ -196,6 +208,48 @@ class SettingsMenuScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _handleCheckForUpdates(BuildContext context) async {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Checking GitHub releases for updates...'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+
+    final info = await appState.checkForAppUpdates(manual: true);
+    if (!context.mounted) return;
+
+    if (info.hasUpdate) {
+      UpdateService.showUpdateDialog(
+        context: context,
+        update: info,
+        onDownload: () => NativeShieldService.openUrl(info.downloadUrl.isNotEmpty ? info.downloadUrl : info.releaseUrl),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: AppTheme.bgMain,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Colors.black, width: 3),
+          ),
+          title: const Text('You\'re on the Latest Version', style: TextStyle(fontWeight: FontWeight.w900)),
+          content: Text(
+            'Inhibit v${info.currentVersion} is up to date.\nChecked against official GitHub releases.',
+            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('GREAT', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   void _showPrivacyPolicyDialog(BuildContext context) {

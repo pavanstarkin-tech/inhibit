@@ -97,4 +97,56 @@ class NativeShieldService {
       return {'totalReelsScrolled': 0, 'totalReelsBlocked': 0};
     }
   }
+
+  static Future<bool> startPostMode({int durationMinutes = 30}) async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return true;
+    }
+    try {
+      final bool? res = await _channel.invokeMethod<bool>('startPostMode', {
+        'durationMinutes': durationMinutes,
+      });
+      return res ?? true;
+    } catch (e) {
+      if (kDebugMode) print('Error starting native post mode: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> isPostModeActive() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return false;
+    }
+    try {
+      final bool? res = await _channel.invokeMethod<bool>('isPostModeActive');
+      return res ?? false;
+    } catch (e) {
+      if (kDebugMode) print('Error checking post mode active: $e');
+      return false;
+    }
+  }
+
+  static Future<int> getPostModeRemainingSeconds() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return 0;
+    }
+    try {
+      final int? res = await _channel.invokeMethod<int>('getPostModeRemainingSeconds');
+      return res ?? 0;
+    } catch (e) {
+      if (kDebugMode) print('Error getting post mode remaining seconds: $e');
+      return 0;
+    }
+  }
+
+  static Future<bool> openUrl(String url) async {
+    try {
+      final bool? res = await _channel.invokeMethod<bool>('openUrl', {'url': url});
+      return res ?? false;
+    } catch (e) {
+      if (kDebugMode) print('Error opening URL natively: $e');
+      return false;
+    }
+  }
 }
+

@@ -134,6 +134,40 @@ class MainActivity : FlutterActivity() {
                         "totalReelsBlocked" to blocked
                     ))
                 }
+                "startPostMode" -> {
+                    val durationMinutes = call.argument<Int>("durationMinutes") ?: 30
+                    val expiresAt = System.currentTimeMillis() + (durationMinutes * 60 * 1000L)
+                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    statsPrefs.edit().putLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, expiresAt).apply()
+                    result.success(true)
+                }
+                "isPostModeActive" -> {
+                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    val expiresAt = statsPrefs.getLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
+                    result.success(System.currentTimeMillis() < expiresAt)
+                }
+                "getPostModeRemainingSeconds" -> {
+                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    val expiresAt = statsPrefs.getLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
+                    val remaining = (expiresAt - System.currentTimeMillis()) / 1000
+                    result.success(if (remaining > 0) remaining.toInt() else 0)
+                }
+                "openUrl" -> {
+                    val url = call.argument<String>("url")
+                    if (url != null) {
+                        try {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            startActivity(browserIntent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.success(false)
+                        }
+                    } else {
+                        result.success(false)
+                    }
+                }
                 else -> result.notImplemented()
             }
         }

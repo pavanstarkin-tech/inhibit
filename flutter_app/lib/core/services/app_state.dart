@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +7,7 @@ import '../models/life_in_weeks.dart';
 import '../models/rule_bundle_model.dart';
 import 'native_shield_service.dart';
 import 'sleep_schedule.dart';
+import 'update_service.dart';
 
 class BlockedEvent {
   final String serviceId;
@@ -96,10 +98,31 @@ class AppState extends ChangeNotifier {
   int _sleepEndMinutes = 7 * 60;   // 7:00 AM
   int get sleepEndMinutes => _sleepEndMinutes;
 
-  // Post mode
+  // Post mode (Intentional 30-Minute Sessions)
   int _postModeUnlocksRemaining = 4;
   int get postModeUnlocksRemaining => _postModeUnlocksRemaining;
   int get postUnlocksRemaining => _postModeUnlocksRemaining;
+
+  bool _isPostModeActive = false;
+  bool get isPostModeActive => _isPostModeActive;
+
+  int _postModeRemainingSeconds = 0;
+  int get postModeRemainingSeconds => _postModeRemainingSeconds;
+
+  String get postModeFormattedTime {
+    final m = (_postModeRemainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_postModeRemainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Timer? _postModeTimer;
+
+  // In-App Updates
+  AppUpdateInfo? _availableUpdate;
+  AppUpdateInfo? get availableUpdate => _availableUpdate;
+
+  bool _isCheckingForUpdates = false;
+  bool get isCheckingForUpdates => _isCheckingForUpdates;
 
   Future<void> setSleepEnabled(bool enabled) async {
     await setSleepSchedule(
@@ -339,10 +362,101 @@ class AppState extends ChangeNotifier {
     return false;
   }
 
+  Future<bool> startPostSession({int durationMinutes = 30}) async {
+    _restorePostMode();
+    if (_postModeUnlocksRemaining <= 0 && !_isPostModeActive) {
+      return false;
+    }
+
+    if (!_isPostModeActive) {
+      _postModeUnlocksRemaining--;
+      await _prefs.setInt(_keyPostUnlocksCount, _postModeUnlocksRemaining);
+    }
+
+    await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
+    _isPostModeActive = true;
+    _postModeRemainingSeconds = durationMinutes * 60;
+
+    _postModeTimer?.cancel();
+    _postModeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_postModeRemainingSeconds > 0) {
+        _postModeRemainingSeconds--;
+        notifyListeners();
+      } else {
+        _isPostModeActive = false;
+        _postModeRemainingSeconds = 0;
+        timer.cancel();
+        notifyListeners();
+      }
+    });
+
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> cancelPostSession() async {
+    await NativeShieldService.startPostMode(durationMinutes: 0);
+    _isPostModeActive = false;
+    _postModeRemainingSeconds = 0;
+    _postModeTimer?.cancel();
+    notifyListeners();
+  }
+
+  Future<void> syncPostModeState() async {
+    final active = await NativeShieldService.isPostModeActive();
+    final remainingSec = await NativeShieldService.getPostModeRemainingSeconds();
+    _isPostModeActive = active;
+    _postModeRemainingSeconds = remainingSec;
+
+    if (active && remainingSec > 0) {
+      _postModeTimer?.cancel();
+      _postModeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (_postModeRemainingSeconds > 0) {
+          _postModeRemainingSeconds--;
+          notifyListeners();
+        } else {
+          _isPostModeActive = false;
+          _postModeRemainingSeconds = 0;
+          timer.cancel();
+          notifyListeners();
+        }
+      });
+    }
+    notifyListeners();
+  }
+
+  // --- In-App Updates ---
+
+  Future<AppUpdateInfo> checkForAppUpdates({bool manual = false}) async {
+    _isCheckingForUpdates = true;
+    if (manual) notifyListeners();
+
+    try {
+      final info = await UpdateService.checkForUpdate();
+      _availableUpdate = info.hasUpdate ? info : null;
+      _isCheckingForUpdates = false;
+      notifyListeners();
+      return info;
+    } catch (e) {
+      _isCheckingForUpdates = false;
+      notifyListeners();
+      return const AppUpdateInfo(
+        hasUpdate: false,
+        currentVersion: UpdateService.currentAppVersion,
+        latestVersion: UpdateService.currentAppVersion,
+        releaseName: 'Check failed',
+        releaseNotes: 'Could not connect to GitHub releases.',
+        downloadUrl: '',
+        releaseUrl: 'https://github.com/pavanstarkin-tech/inhibit-app/releases',
+      );
+    }
+  }
+
   // --- Native OS Granular Shielding ---
 
   Future<void> checkAccessibilityPermission() async {
     _isAccessibilityGranted = await NativeShieldService.isAccessibilityGranted();
+    await syncPostModeState();
     notifyListeners();
   }
 

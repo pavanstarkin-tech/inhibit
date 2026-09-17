@@ -32,6 +32,24 @@ class GuardController(private val context: Context) {
 
     var onReelCountChanged: ((Int) -> Unit)? = null
 
+    val isPostModeActive: Boolean
+        get() {
+            val expiresAt = prefs.getLong(KEY_POST_MODE_EXPIRES_AT, 0L)
+            return System.currentTimeMillis() < expiresAt
+        }
+
+    fun startPostMode(durationMinutes: Int = 30) {
+        val expiresAt = System.currentTimeMillis() + (durationMinutes * 60 * 1000L)
+        prefs.edit().putLong(KEY_POST_MODE_EXPIRES_AT, expiresAt).apply()
+        Log.d("INHIBIT_GUARD", "Intentional Post Mode STARTED for $durationMinutes min (Expires at $expiresAt)")
+    }
+
+    fun getPostModeRemainingSeconds(): Long {
+        val expiresAt = prefs.getLong(KEY_POST_MODE_EXPIRES_AT, 0L)
+        val remaining = (expiresAt - System.currentTimeMillis()) / 1000
+        return if (remaining > 0) remaining else 0L
+    }
+
     var totalReelsScrolled: Int
         get() = prefs.getInt(KEY_TOTAL_REELS_SCROLLED, 0)
         private set(value) = prefs.edit().putInt(KEY_TOTAL_REELS_SCROLLED, value).apply()
@@ -52,6 +70,13 @@ class GuardController(private val context: Context) {
         }
 
         val now = System.currentTimeMillis()
+
+        // --- Intentional Post Mode Check (30-Minute Creator Session) ---
+        if (isPostModeActive) {
+            val remainingSec = (prefs.getLong(KEY_POST_MODE_EXPIRES_AT, 0L) - now) / 1000
+            Log.d("INHIBIT_GUARD", "Intentional Post Mode ACTIVE (${remainingSec}s left) -> Passing all events without restriction")
+            return
+        }
         val isConfirmedVideo = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.YOUTUBE_SHORT)
         val isPossibleVideo = (newScreen == Screen.INSTAGRAM_REEL_POSSIBLE || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE)
         val isAnyVideo = isConfirmedVideo || isPossibleVideo
@@ -161,5 +186,6 @@ class GuardController(private val context: Context) {
         const val PREFS_STATS = "inhibit_stats_prefs"
         const val KEY_TOTAL_REELS_SCROLLED = "total_reels_scrolled"
         const val KEY_TOTAL_REELS_BLOCKED = "total_reels_blocked"
+        const val KEY_POST_MODE_EXPIRES_AT = "post_mode_expires_at"
     }
 }
