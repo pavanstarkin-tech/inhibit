@@ -14,7 +14,9 @@ import {
   Music, 
   MessageSquare, 
   Sliders, 
-  ChevronDown
+  ChevronDown,
+  Menu,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -25,6 +27,9 @@ const FacebookIcon = ({ size = 20, className = '' }) => (
 );
 
 export default function App() {
+  // Mobile Navigation State
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   // Simulator State
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'shield' | 'profile'
   const [simulatedBlockedCount, setSimulatedBlockedCount] = useState(164);
@@ -98,51 +103,105 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div style={{ backgroundColor: 'var(--accent-yellow)', borderBottom: '2.5px solid #000', padding: '8px 16px', textAlign: 'center', fontSize: '13px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span className="neo-badge green" style={{ fontSize: '10px', padding: '2px 8px' }}>NEW v1.0.0 RELEASE</span>
-        <span>Zero Telemetry Android Shield — Instagram Reels & YouTube Shorts auto-redirection active!</span>
+      <div style={{ backgroundColor: 'var(--accent-yellow)', borderBottom: '2.5px solid #000', padding: '8px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <span className="neo-badge green" style={{ fontSize: '9px', padding: '2px 6px' }}>v1.0.0 RELEASE</span>
+        <span>Zero Telemetry Android Shield — Instagram & YouTube protection active!</span>
         <button onClick={() => setShowDownloadModal(true)} style={{ background: 'none', border: 'none', textDecoration: 'underline', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>Download APK →</button>
       </div>
 
       {/* 2. NAVBAR */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'rgba(255, 253, 240, 0.95)', backdropFilter: 'blur(8px)', borderBottom: '2.5px solid #000', padding: '14px 24px' }}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'rgba(255, 253, 240, 0.96)', backdropFilter: 'blur(8px)', borderBottom: '2.5px solid #000', padding: '12px 20px' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {/* Logo */}
-          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: '#000' }}>
-            <img src="./logo.png" alt="Inhibit Logo" style={{ height: '36px', width: 'auto', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
-            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '24px', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: '#000' }}>
+            <img src="./logo.png" alt="Inhibit Logo" style={{ height: '32px', width: 'auto', objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '22px', letterSpacing: '-0.03em', display: 'flex', alignItems: 'center', gap: '4px' }}>
               Inhibit<span style={{ color: 'var(--accent-yellow)' }}>★</span>
             </span>
           </a>
 
-          {/* Nav Links */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '28px', fontWeight: 800, fontSize: '14px' }} className="hidden-on-mobile">
+          {/* Desktop Nav Links */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '24px', fontWeight: 800, fontSize: '14px' }} className="hidden-on-mobile">
             <a href="#features" style={{ color: '#000', textDecoration: 'none' }}>Features</a>
             <a href="#simulator" style={{ color: '#000', textDecoration: 'none' }}>Interactive Demo</a>
-            <a href="#how-it-works" style={{ color: '#000', textDecoration: 'none' }}>How It Works</a>
             <a href="#services" style={{ color: '#000', textDecoration: 'none' }}>Protected Services</a>
             <a href="#privacy" style={{ color: '#000', textDecoration: 'none' }}>Privacy Manifesto</a>
             <a href="#faq" style={{ color: '#000', textDecoration: 'none' }}>FAQ</a>
           </nav>
 
-          {/* Action Button */}
-          <button 
-            onClick={() => setShowDownloadModal(true)}
-            className="neo-btn"
-            style={{ padding: '8px 16px', fontSize: '14px' }}
-          >
-            <Download size={16} />
-            <span>Get APK</span>
-          </button>
+          {/* Action & Mobile Hamburger Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button 
+              onClick={() => setShowDownloadModal(true)}
+              className="neo-btn"
+              style={{ padding: '8px 14px', fontSize: '13px' }}
+            >
+              <Download size={15} />
+              <span>Get APK</span>
+            </button>
+
+            {/* Mobile Hamburger Toggle */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="neo-btn white visible-on-mobile"
+              style={{ padding: '8px 10px', fontSize: '14px' }}
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Dropdown Drawer */}
+        {mobileMenuOpen && (
+          <div className="visible-on-mobile" style={{ flexDirection: 'column', gap: '12px', padding: '16px 0 8px', borderTop: '2px solid #000', marginTop: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontWeight: 800, fontSize: '14px' }}>
+              <a 
+                href="#features" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: '#000', textDecoration: 'none', padding: '8px 12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px', boxShadow: '2px 2px 0px #000' }}
+              >
+                Features
+              </a>
+              <a 
+                href="#simulator" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: '#000', textDecoration: 'none', padding: '8px 12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px', boxShadow: '2px 2px 0px #000' }}
+              >
+                Interactive Phone Demo
+              </a>
+              <a 
+                href="#services" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: '#000', textDecoration: 'none', padding: '8px 12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px', boxShadow: '2px 2px 0px #000' }}
+              >
+                Protected Services
+              </a>
+              <a 
+                href="#privacy" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: '#000', textDecoration: 'none', padding: '8px 12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px', boxShadow: '2px 2px 0px #000' }}
+              >
+                Privacy Manifesto
+              </a>
+              <a 
+                href="#faq" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{ color: '#000', textDecoration: 'none', padding: '8px 12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px', boxShadow: '2px 2px 0px #000' }}
+              >
+                FAQ
+              </a>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* 3. HERO SECTION */}
-      <section style={{ padding: '60px 20px', borderBottom: '2.5px solid #000', backgroundColor: '#FFFDF0' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '48px', alignItems: 'center' }}>
+      <section style={{ padding: '48px 20px', borderBottom: '2.5px solid #000', backgroundColor: '#FFFDF0' }}>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '36px', alignItems: 'center' }}>
           
           {/* Left Column: Value Prop */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               <span className="neo-badge green" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span className="pulse-dot"></span> 100% LOCAL ON-DEVICE
@@ -151,50 +210,50 @@ export default function App() {
               <span className="neo-badge blue">NO APP EXITS</span>
             </div>
 
-            <h1 style={{ fontSize: 'clamp(38px, 6vw, 64px)', fontWeight: 900, color: '#000', lineHeight: 1.05 }}>
+            <h1 style={{ fontSize: 'clamp(34px, 5.5vw, 60px)', fontWeight: 900, color: '#000', lineHeight: 1.08 }}>
               SCROLL LESS.<br />
               <span style={{ backgroundColor: 'var(--accent-yellow)', padding: '2px 8px', border: '2.5px solid #000', display: 'inline-block', boxShadow: '4px 4px 0px #000', transform: 'rotate(-1deg)', marginTop: '6px' }}>
                 LIVE MORE.
               </span>
             </h1>
 
-            <p style={{ fontSize: '18px', fontWeight: 700, color: '#333', maxWidth: '580px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '16px', fontWeight: 700, color: '#333', maxWidth: '580px', lineHeight: 1.5 }}>
               The first privacy-engineered Android guard that intercepts algorithmic short-form loops in <span style={{ textDecoration: 'underline', textDecorationColor: '#FF6B6B', textDecorationThickness: '2px' }}>Instagram Reels</span> and <span style={{ textDecoration: 'underline', textDecorationColor: '#FF6B6B', textDecorationThickness: '2px' }}>YouTube Shorts</span> and seamlessly redirects you to your chronological feed — <strong>without closing your apps.</strong>
             </p>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', paddingTop: '10px' }}>
+            <div className="hero-cta-group" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', paddingTop: '6px' }}>
               <button 
                 onClick={() => setShowDownloadModal(true)}
                 className="neo-btn"
-                style={{ fontSize: '16px', padding: '14px 24px', backgroundColor: 'var(--accent-yellow)' }}
+                style={{ fontSize: '15px', padding: '12px 20px', backgroundColor: 'var(--accent-yellow)' }}
               >
-                <Download size={20} />
+                <Download size={18} />
                 <span>Download Inhibit v1.0.0</span>
               </button>
 
               <button 
                 onClick={triggerSimulation}
                 className="neo-btn green"
-                style={{ fontSize: '16px', padding: '14px 24px' }}
+                style={{ fontSize: '15px', padding: '12px 20px' }}
               >
-                <Zap size={20} />
+                <Zap size={18} />
                 <span>Test Live Simulation</span>
               </button>
             </div>
 
             {/* Quick Proof Metrics */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', paddingTop: '16px', maxWidth: '500px' }}>
-              <div className="neo-card" style={{ padding: '14px', textAlign: 'center', backgroundColor: '#fff' }}>
-                <div style={{ fontSize: '24px', fontWeight: 900 }}>0ms</div>
-                <div style={{ fontSize: '10px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Cloud Latency</div>
+            <div className="proof-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', paddingTop: '10px', maxWidth: '500px' }}>
+              <div className="neo-card" style={{ padding: '12px 8px', textAlign: 'center', backgroundColor: '#fff' }}>
+                <div style={{ fontSize: '22px', fontWeight: 900 }}>0ms</div>
+                <div style={{ fontSize: '9px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Cloud Latency</div>
               </div>
-              <div className="neo-card" style={{ padding: '14px', textAlign: 'center', backgroundColor: 'var(--accent-pink)' }}>
-                <div style={{ fontSize: '24px', fontWeight: 900 }}>100%</div>
-                <div style={{ fontSize: '10px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Local & Private</div>
+              <div className="neo-card" style={{ padding: '12px 8px', textAlign: 'center', backgroundColor: 'var(--accent-pink)' }}>
+                <div style={{ fontSize: '22px', fontWeight: 900 }}>100%</div>
+                <div style={{ fontSize: '9px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Local & Private</div>
               </div>
-              <div className="neo-card" style={{ padding: '14px', textAlign: 'center', backgroundColor: 'var(--accent-yellow)' }}>
-                <div style={{ fontSize: '24px', fontWeight: 900 }}>4 Daily</div>
-                <div style={{ fontSize: '10px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Post Unlocks</div>
+              <div className="neo-card" style={{ padding: '12px 8px', textAlign: 'center', backgroundColor: 'var(--accent-yellow)' }}>
+                <div style={{ fontSize: '22px', fontWeight: 900 }}>4 Daily</div>
+                <div style={{ fontSize: '9px', fontWeight: 800, color: '#666', textTransform: 'uppercase' }}>Post Unlocks</div>
               </div>
             </div>
           </div>
