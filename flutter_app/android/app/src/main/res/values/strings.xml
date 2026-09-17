@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inhibit</string>
+    <string name="accessibility_service_description">Enables Inhibit to detect when Reels and Shorts short-form feeds are opened in Instagram and YouTube, automatically redirecting them so you can use DMs, messages, and regular feeds without falling into doomscrolling.</string>
+</resources>

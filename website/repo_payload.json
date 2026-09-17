@@ -1,0 +1,7 @@
+{
+  "name": "inhibit",
+  "description": "Inhibit - Scroll Less. Live More. The Privacy-First Anti-Doomscrolling Android Guard",
+  "homepage": "https://pavanstarkin-tech.github.io/inhibit/",
+  "private": false,
+  "auto_init": true
+}

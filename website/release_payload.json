@@ -1,0 +1,9 @@
+{
+  "tag_name": "v1.0.0",
+  "target_commitish": "main",
+  "name": "Inhibit v1.0.0 - Official Android Release",
+  "body": "## Inhibit v1.0.0 (Official Release)\n\n### What's New:\n- **Instagram Reels & YouTube Shorts Auto-Redirection**: Automatically intercepts full-screen short-form doomscroll loops and navigates seamlessly back to your chronological Home feed without closing your apps.\n- **Zero App Exits**: Keeps Direct Messages, stories, search, and standard feeds fully functional.\n- **Intentional Post Mode**: 4 daily 30-minute unlock sessions to create and share distraction-free.\n- **100% On-Device Privacy**: Sandboxed local accessibility detector with zero telemetry, zero cloud logging, and zero tracking.\n\n### Downloads:\n- **`inhibit-v1.0.0.apk`**: Direct Android APK install package.",
+  "draft": false,
+  "prerelease": false,
+  "generate_release_notes": false
+}
