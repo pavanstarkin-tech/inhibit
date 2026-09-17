@@ -43,45 +43,47 @@
 
 ### 1. 🔄 Zero-Exit Interception Flow (How Reels & Shorts are Deflected)
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as User
-    participant App as Instagram / YouTube
-    participant Acc as Inhibit Accessibility Service
-    participant Guard as GuardController / ScreenDetector
-    participant Feed as Chronological Home Feed
-
-    User->>App: Opens App & swipes into Reels / Shorts
-    App->>Acc: Dispatches Window State & Content Event
-    Acc->>Guard: Inspects active view node IDs & layout signatures
-    alt Screen is Instagram Reel or YouTube Short
-        alt Intentional Post Mode is Active (Unlocked)
-            Guard-->>Acc: Allow interaction (Creator Mode Active)
-            Acc-->>App: Pass through touch events
-        else Protection Active
-            Guard->>Acc: Trigger Safe Back Redirection
-            Acc->>App: Perform GLOBAL_ACTION_BACK or synthetic Tab Bar click
-            App-->>Feed: Smoothly transition back to Home feed
-            Acc->>Acc: Increment daily Interceptions counter (+1)
-        end
-    else Normal Home Feed / DMs / Search / Long-form Videos
-        Guard-->>Acc: Allow normal app interaction
-    end
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ZERO-EXIT INTERCEPTION WORKFLOW                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+  👤 User Swipes into Reels / Shorts
+       │
+       ▼
+  📱 Android App Dispatches UI Event  ──▶  🛡️ Accessibility Service Listens
+                                                    │
+                                                    ▼
+                                           ⚙️ ScreenDetector Inspects Node IDs
+                                                    │
+                   ┌────────────────────────────────┴───────────────────────────────┐
+                   ▼                                                                ▼
+       [Intentional Post Mode ACTIVE]                              [Reel / Short Detected & LOCKED]
+                   │                                                                │
+                   ▼                                                                ▼
+     Pass Touch Events Through                                    ⚡ Dispatch Safe GLOBAL_ACTION_BACK
+  (30-Min Content Creation Session)                                                 │
+                                                                                    ▼
+                                                                  🏠 Returned to Chronological Feed
+                                                                     (App Stays 100% Open & Active!)
 ```
 
 ---
 
 ### 2. 🚀 Onboarding & Setup Workflow
 
-```mermaid
-flowchart LR
-    A["1. Welcome & Mission"] --> B["2. Infinite Scroll Trap"]
-    B --> C["3. Life in Weeks"]
-    C --> D["4. Personalized Goals"]
-    D --> E["5. Shield Permission"]
-    E -->|Enable Shield| F["System Accessibility Settings"]
-    F -->|Turn ON| G["App Dashboard (Protected)"]
+```text
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│   SCREEN 1   │───▶ │   SCREEN 2   │───▶ │   SCREEN 3   │───▶ │   SCREEN 4   │───▶ │   SCREEN 5   │
+│ Welcome &    │     │ The Infinite │     │ Life in      │     │ Focus Goals  │     │ Accessibility│
+│ Mission      │     │ Scroll Trap  │     │ Weeks Grid   │     │ & Platforms  │     │ Shield Setup │
+└──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘     └──────┬───────┘
+                                                                                           │
+                                        ┌──────────────────────────────────────────────────┘
+                                        ▼
+                         ┌─────────────────────────────┐     ┌─────────────────────────────┐
+                         │ System Accessibility Screen │───▶ │ Inhibit Dashboard (Active)  │
+                         │   [ Toggle Shield: ON ]     │     │  0ms Cloud • 100% On-Device │
+                         └─────────────────────────────┘     └─────────────────────────────┘
 ```
 
 > **Onboarding Breakdown**:
@@ -95,13 +97,30 @@ flowchart LR
 
 ### 3. ⚡ Intentional Post Mode State Machine
 
-```mermaid
-stateDiagram-v2
-    [*] --> Protected: Default Shield Active
-    Protected --> Unlocked: User taps 'Unlock for 30 Min' (Uses 1 of 4 tokens)
-    Unlocked --> Protected: 30-min timer expires or User locks manually
-    Protected --> ResetDaily: Midnight (00:00)
-    ResetDaily --> Protected: 4 Unlock Tokens Restored
+```text
+                    ┌──────────────────────────────────────────────┐
+                    │          🛡️ DEFAULT: SHIELD ACTIVE           │
+                    │   Reels & Shorts Intercepted Automatically   │
+                    └──────────────────────┬───────────────────────┘
+                                           │
+                        User taps "Unlock for 30 Min"
+                          (Uses 1 of 4 Daily Tokens)
+                                           │
+                                           ▼
+                    ┌──────────────────────────────────────────────┐
+                    │         🔓 INTENTIONAL POST MODE ACTIVE       │
+                    │   30-Minute Window to Post & Reply to DMs   │
+                    └──────────────────────┬───────────────────────┘
+                                           │
+                               ┌───────────┴───────────┐
+                               ▼                       ▼
+                     [ 30 Min Timer Expires ]   [ User Manually Locks ]
+                               │                       │
+                               └───────────┬───────────┘
+                                           ▼
+                    ┌──────────────────────────────────────────────┐
+                    │    Midnight (00:00): Daily 4 Tokens Reset    │
+                    └──────────────────────────────────────────────┘
 ```
 
 ---
