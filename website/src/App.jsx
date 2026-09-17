@@ -102,12 +102,24 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 1. TOP ANNOUNCEMENT BAR (SINGLE ROW STRIP) */}
-      <div className="top-strip">
-        <span className="neo-badge green strip-badge">v1.0.0 RELEASE</span>
-        <span className="strip-text">Zero Telemetry Android Shield — Instagram & YouTube protection active!</span>
-        <span style={{ opacity: 0.5, flexShrink: 0 }}>•</span>
-        <button onClick={() => setShowDownloadModal(true)} className="strip-link">Download APK →</button>
+      {/* 1. TOP ANNOUNCEMENT BAR (INFINITE MARQUEE STRIP) */}
+      <div className="top-marquee-container" title="Click to download APK" onClick={() => setShowDownloadModal(true)}>
+        <div className="top-marquee-track">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="marquee-item">
+              <span className="neo-badge green strip-badge">v1.0.0 RELEASE</span>
+              <span>⚡ Zero Telemetry Android Shield — Instagram Reels & YouTube Shorts auto-redirection active!</span>
+              <span style={{ opacity: 0.5 }}>•</span>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowDownloadModal(true); }} 
+                className="strip-link"
+              >
+                Download APK →
+              </button>
+              <span style={{ opacity: 0.4 }}>✦</span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* 2. NAVBAR */}
