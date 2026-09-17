@@ -215,7 +215,7 @@ export default function App() {
           
           {/* Left Column: Value Prop */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <div className="hidden-on-mobile" style={{ flexWrap: 'wrap', gap: '8px' }}>
               <span className="neo-badge green" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span className="pulse-dot"></span> 100% LOCAL ON-DEVICE
               </span>
