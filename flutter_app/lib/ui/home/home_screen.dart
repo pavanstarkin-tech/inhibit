@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/service_model.dart';
 import '../../core/services/app_state.dart';
 import '../../core/services/native_shield_service.dart';
+import '../../core/services/update_service.dart';
 import '../components/neo_badge.dart';
 import '../components/neo_card.dart';
 import '../settings/settings_menu_screen.dart';
@@ -42,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _refreshStats();
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) => _refreshStats());
+    // Auto-check for updates in background on launch
+    widget.appState.checkForAppUpdates();
   }
 
   @override
@@ -74,38 +77,97 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.bgMain,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTopBar(context),
-              const SizedBox(height: 12),
+    return AnimatedBuilder(
+      animation: widget.appState,
+      builder: (context, _) {
+        final update = widget.appState.availableUpdate;
 
-              // SCROLL LESS. LIVE MORE. Banner
-              _buildHeroBanner(),
-              const SizedBox(height: 14),
+        return Scaffold(
+          backgroundColor: AppTheme.bgMain,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTopBar(context),
+                  const SizedBox(height: 12),
 
-              // DISTRACTIONS BLOCKED Stat Card (REAL LIVE STATS)
-              _buildDistractionsBlockedCard(),
-              const SizedBox(height: 20),
+                  if (update != null && update.hasUpdate) ...[
+                    _buildUpdateBanner(context, update),
+                    const SizedBox(height: 12),
+                  ],
 
-              // YOUR SERVICES
-              _buildSectionHeader(
-                context,
-                title: 'PROTECTED SERVICES',
-                actionText: 'Settings →',
-                onAction: () => _openServiceSettings(context, 'instagram'),
+                  // SCROLL LESS. LIVE MORE. Banner
+                  _buildHeroBanner(),
+                  const SizedBox(height: 14),
+
+                  // DISTRACTIONS BLOCKED Stat Card (REAL LIVE STATS)
+                  _buildDistractionsBlockedCard(),
+                  const SizedBox(height: 20),
+
+                  // YOUR SERVICES
+                  _buildSectionHeader(
+                    context,
+                    title: 'PROTECTED SERVICES',
+                    actionText: 'Settings →',
+                    onAction: () => _openServiceSettings(context, 'instagram'),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildYourServicesGrid(context),
+                  const SizedBox(height: 24),
+                ],
               ),
-              const SizedBox(height: 10),
-              _buildYourServicesGrid(context),
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
+        );
+      },
+    );
+  }
+
+  Widget _buildUpdateBanner(BuildContext context, AppUpdateInfo update) {
+    return NeoCard(
+      backgroundColor: AppTheme.accentYellow,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      shadowOffset: const Offset(3, 3),
+      onTap: () {
+        UpdateService.showUpdateDialog(
+          context: context,
+          update: update,
+          onDownload: () => NativeShieldService.openUrl(
+            update.downloadUrl.isNotEmpty ? update.downloadUrl : update.releaseUrl,
+          ),
+        );
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppTheme.borderBlack, width: 1.5),
+            ),
+            child: const Icon(Icons.system_update_alt_rounded, color: Colors.black, size: 18),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Update Available: v${update.latestVersion}',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
+                ),
+                const Text(
+                  'Tap to view changelog and download APK',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF444444)),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
+        ],
       ),
     );
   }
