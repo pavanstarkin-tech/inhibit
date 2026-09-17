@@ -41,20 +41,19 @@
 
 ## 🗺️ Interactive System Flows
 
-<details open>
-<summary><b>1. 🔄 Zero-Exit Interception Flow (How Reels & Shorts are Deflected)</b> <i>[Click to expand/collapse]</i></summary>
+### 1. 🔄 Zero-Exit Interception Flow (How Reels & Shorts are Deflected)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as 👤 User
-    participant App as 📱 Instagram / YouTube
-    participant Acc as 🛡️ Inhibit Accessibility Service
-    participant Guard as ⚙️ GuardController / ScreenDetector
-    participant Feed as 🏠 Chronological Home Feed
+    actor User as User
+    participant App as Instagram / YouTube
+    participant Acc as Inhibit Accessibility Service
+    participant Guard as GuardController / ScreenDetector
+    participant Feed as Chronological Home Feed
 
     User->>App: Opens App & swipes into Reels / Shorts
-    App->>Acc: Dispatches TYPE_WINDOW_STATE_CHANGED / CONTENT_CHANGE
+    App->>Acc: Dispatches Window State & Content Event
     Acc->>Guard: Inspects active view node IDs & layout signatures
     alt Screen is Instagram Reel or YouTube Short
         alt Intentional Post Mode is Active (Unlocked)
@@ -70,42 +69,40 @@ sequenceDiagram
         Guard-->>Acc: Allow normal app interaction
     end
 ```
-</details>
 
-<details>
-<summary><b>2. 🚀 Onboarding & Setup Workflow</b> <i>[Click to expand/collapse]</i></summary>
+---
+
+### 2. 🚀 Onboarding & Setup Workflow
 
 ```mermaid
-graph TD
-    A[Screen 1: Welcome & Mission] --> B[Screen 2: The Infinite Scroll Trap]
-    B --> C[Screen 3: Life in Weeks Perspective]
-    C --> D[Screen 4: Personalized Focus Goals]
-    D --> E[Screen 5: Device App Shielding Permission]
-    E -->|User Taps 'Enable Shield'| F[System Settings: Accessibility Services]
-    F -->|Inhibit Service Toggled ON| G[Main Application Dashboard]
-    G --> H[Protection Active in Background]
+flowchart LR
+    A["1. Welcome & Mission"] --> B["2. Infinite Scroll Trap"]
+    B --> C["3. Life in Weeks"]
+    C --> D["4. Personalized Goals"]
+    D --> E["5. Shield Permission"]
+    E -->|Enable Shield| F["System Accessibility Settings"]
+    F -->|Turn ON| G["App Dashboard (Protected)"]
 ```
 
-#### Onboarding Step Breakdown:
-1. **Welcome**: Introduction to Inhibit's neo-brutalist focus ecosystem.
-2. **The Problem**: Exposing how infinite swipe containers hijack dopamine pathways.
-3. **Perspective**: Life-in-Weeks visualization quantifying reclaimed time.
-4. **Customization**: Choosing protected platforms and daily intent targets.
-5. **System Bridge**: Guiding Android Accessibility permission directly before entering the home feed.
-</details>
+> **Onboarding Breakdown**:
+> 1. **Welcome**: Introduction to Inhibit's neo-brutalist focus ecosystem.
+> 2. **The Problem**: Exposing how infinite swipe containers hijack dopamine pathways.
+> 3. **Perspective**: Life-in-Weeks visualization quantifying reclaimed time.
+> 4. **Customization**: Choosing protected platforms and daily intent targets.
+> 5. **System Bridge**: Guiding Android Accessibility permission directly before entering the home feed.
 
-<details>
-<summary><b>3. ⚡ Intentional Post Mode Flow</b> <i>[Click to expand/collapse]</i></summary>
+---
+
+### 3. ⚡ Intentional Post Mode State Machine
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Locked: Default Protected State
-    Locked --> CountdownTimer: User clicks 'Unlock for 30 Min' (Uses 1 of 4 daily tokens)
-    CountdownTimer --> CountdownTimer: 30-minute creation & posting window active
-    CountdownTimer --> Locked: Timer expires / User manually locks
-    Locked --> ResetDaily: Midnight (00:00) resets daily tokens to 4
+    [*] --> Protected: Default Shield Active
+    Protected --> Unlocked: User taps 'Unlock for 30 Min' (Uses 1 of 4 tokens)
+    Unlocked --> Protected: 30-min timer expires or User locks manually
+    Protected --> ResetDaily: Midnight (00:00)
+    ResetDaily --> Protected: 4 Unlock Tokens Restored
 ```
-</details>
 
 ---
 
