@@ -1042,6 +1042,19 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* 12. FLOATING DOWNLOAD BUTTON */}
+      <div className="floating-download-container">
+        <button 
+          onClick={() => setShowDownloadModal(true)}
+          className="floating-download-btn"
+          aria-label="Download Inhibit APK"
+        >
+          <span className="pulse-dot"></span>
+          <Download size={18} />
+          <span>Get APK (v1.0.0)</span>
+        </button>
+      </div>
     </div>
   );
 }

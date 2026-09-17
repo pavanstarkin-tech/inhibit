@@ -250,3 +250,56 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
+
+/* Floating Download Button */
+.floating-download-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: bounce-gentle 4s infinite ease-in-out;
+}
+
+.floating-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background-color: var(--accent-yellow);
+  color: #000000;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 15px;
+  border: 2.5px solid #000000;
+  border-radius: 999px;
+  box-shadow: 5px 5px 0px #000000;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.floating-download-btn:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 8px 8px 0px #000000;
+  background-color: #FFE500;
+}
+
+.floating-download-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #000000;
+}
+
+@media (max-width: 640px) {
+  .floating-download-container {
+    bottom: 16px;
+    right: 16px;
+  }
+  .floating-download-btn {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
