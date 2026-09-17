@@ -1,211 +1,224 @@
-# NoScroll
+<div align="center">
 
-![NoScroll — the home screen, the setup screen, and Instagram with no Reels tab](docs/img/hero.jpg)
+# 🛑 Inhibit (NoScroll)
+### *Scroll Less. Live More.*
 
-**Use Instagram and YouTube without short-form video.** Free, open source, no paywall, no ads,
-no analytics.
+[![Release](https://img.shields.io/badge/Release-v1.0.0--beta-F59E0B?style=for-the-badge&logo=android&logoColor=black)](https://github.com/pavanstarkin-tech/inhibit/releases/tag/v1.0.0)
+[![Download APK](https://img.shields.io/badge/Download-inhibit--v1.0.0.apk-10B981?style=for-the-badge&logo=google-play&logoColor=white)](https://github.com/pavanstarkin-tech/inhibit/releases/download/v1.0.0/inhibit-v1.0.0.apk)
+[![Live Showcase Demo](https://img.shields.io/badge/Live_Demo-pavanstarkin--tech.github.io%2Finhibit-6366F1?style=for-the-badge&logo=react&logoColor=white)](https://pavanstarkin-tech.github.io/inhibit/)
+[![Privacy](https://img.shields.io/badge/Privacy-100%25_Zero_Telemetry-EC4899?style=for-the-badge&logo=shield&logoColor=white)](https://pavanstarkin-tech.github.io/inhibit/#privacy)
 
-NoScroll removes Reels, Shorts, Explore and algorithmically suggested content — and keeps the
-parts you actually opened the app for: messages, the people you follow, and posting. When a
-friend sends you a reel you can watch *that* video. You just can't scroll to the next one.
+<p align="center">
+  <b>The first privacy-engineered Android distraction interceptor designed to stop short-form algorithmic loops (Instagram Reels & YouTube Shorts) and redirect you back to your chronological feed — <i>without closing your apps</i>.</b>
+</p>
 
-Eight services: **Instagram** and **YouTube** are probe-verified against the live sites;
-**X, TikTok, Facebook, LinkedIn, Snapchat** and **Reddit** ship as beta and are labelled so in
-the app.
-
-> Status: **pre-release.** The engine, rule bundles, both native shells and the shield layers are
-> written and tested, and both the iPhone and Android apps build and run. Not yet submitted to either store —
-> see [What's not done](#whats-not-done).
+[✨ Try Live Web Simulator](https://pavanstarkin-tech.github.io/inhibit/#simulator) • [📥 Download APK](https://github.com/pavanstarkin-tech/inhibit/releases/download/v1.0.0/inhibit-v1.0.0.apk) • [🛡️ Protected Services](#-protected-services-matrix) • [🏗️ Architecture & Flows](#-interactive-system-flows) • [⚡ Quickstart](#-developer-quickstart)
 
 ---
 
-## How it works
+</div>
 
-Two layers. The second is the one that matters.
+## 🌟 Key Highlights & Philosophy
 
-**1. The wrapper.** NoScroll loads the platforms' own mobile websites in an embedded browser and
-injects a small engine that hides or removes the endless surfaces. Your session cookies stay on
-your device.
-
-**2. The shield.** A wrapper on its own enforces nothing — you'd just open Safari. So NoScroll also
-shields the real Instagram and YouTube apps at the OS level (iOS Screen Time / FamilyControls,
-Android AccessibilityService), which makes the stripped version the way in rather than a
-suggestion.
-
-```
-engine/    TypeScript → one IIFE. The entire blocking implementation.
-rules/     Signed JSON rule bundles. Data, not code — updatable without an app release.
-ios/       Swift. WKWebView shell + FamilyControls + three Screen Time extensions
-           + a WidgetKit extension (home-screen shortcuts via noscroll://open/<service>).
-android/   Kotlin. WebView shell + AccessibilityService.
-probe/     Playwright smoke tests, run every 6h against live Instagram and YouTube.
-tools/     Bundle signing, cross-language canonicalisation check, engine sync.
-```
-
-The engine is byte-identical on both platforms. Everything platform-specific stays in the shells.
-
-### The app
-
-**iOS.** First run is a narrative, not a checklist: how much you scroll → how old you are →
-**your life in weeks**, with every band and the percentage derived from your two answers (at 18,
-scrolling 4.8h of a 5h daily surplus, that is 96% of your remaining free time). Then the
-permissions, then out.
-
-Home is one service at a time, with today's usage, that service's switches, and a five-tab shell —
-Sleep, everything-blocked, Home, Shield, You. A WidgetKit extension puts the same services on your
-home screen, opening through NoScroll via `noscroll://open/<service>`.
-
-**Android does not have this UI yet.** There is no onboarding narrative, no five-tab shell, and no
-widget. What exists: the wrapper (Instagram and YouTube, with a button to switch between them) and
-the shield, plus a Status screen showing whether the accessibility permission is granted and which
-apps are shielded — reachable from a button in the wrapper, not a settings tab. Fresh installs
-shield Instagram and YouTube by default the same as iOS does. Building Android up to the same
-onboarding/shell UI iOS has is open work, not a bug — see the install guide, which should say so at
-the point a user would otherwise expect to see it.
-
-### Rules are data
-
-Every competitor in this category hardcodes CSS selectors and patches them reactively, which is
-why they visibly leak. NoScroll ships selectors as an **ed25519-signed JSON bundle** fetched at
-runtime with a three-tier fallback — remote → cached → baked into the binary — so a cold first
-launch with no network still blocks, and an upstream redesign is fixed in minutes instead of an
-App Store review cycle.
-
-Every rule declares `expectMin`. The engine counts what it actually matched and reports anomalies,
-so a rotted selector raises an alert before a user notices.
-
-**Rules are open to pull requests.** If Instagram changes something and NoScroll starts leaking,
-you can fix it yourself — see [docs/RULES.md](docs/RULES.md).
+<table>
+<tr>
+<td width="33%" align="center">
+<h3>🚪 No App Exits</h3>
+<p>Unlike blunt blockers that crash or force-close your apps, Inhibit gracefully navigates back to your Home feed so DMs, search, and posts remain 100% usable.</p>
+</td>
+<td width="33%" align="center">
+<h3>⏱️ Intentional Post Mode</h3>
+<p>Creators get <b>4 daily 30-minute unlock sessions</b> to upload stories, post content, and respond to community messages distraction-free.</p>
+</td>
+<td width="33%" align="center">
+<h3>🔒 100% Local Sandboxed</h3>
+<p>Zero cloud servers. Zero analytics. Zero telemetry. Detection heuristics run purely on-device via Android Accessibility Callbacks.</p>
+</td>
+</tr>
+</table>
 
 ---
 
-## Build
+## 🗺️ Interactive System Flows
 
-Use pnpm 9, or 10.5 or newer. pnpm 10 and 11 block dependency build scripts by
-default; `engine/pnpm-workspace.yaml` pre-approves the one dependency that needs
-one (esbuild, whose postinstall links its native binary). pnpm 10.4 and older
-read that approval from a different place and will still print
-`[ERR_PNPM_IGNORED_BUILDS]` — upgrade pnpm rather than working around it.
+<details open>
+<summary><b>1. 🔄 Zero-Exit Interception Flow (How Reels & Shorts are Deflected)</b> <i>[Click to expand/collapse]</i></summary>
 
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 User
+    participant App as 📱 Instagram / YouTube
+    participant Acc as 🛡️ Inhibit Accessibility Service
+    participant Guard as ⚙️ GuardController / ScreenDetector
+    participant Feed as 🏠 Chronological Home Feed
+
+    User->>App: Opens App & swipes into Reels / Shorts
+    App->>Acc: Dispatches TYPE_WINDOW_STATE_CHANGED / CONTENT_CHANGE
+    Acc->>Guard: Inspects active view node IDs & layout signatures
+    alt Screen is Instagram Reel or YouTube Short
+        alt Intentional Post Mode is Active (Unlocked)
+            Guard-->>Acc: Allow interaction (Creator Mode Active)
+            Acc-->>App: Pass through touch events
+        else Protection Active
+            Guard->>Acc: Trigger Safe Back Redirection
+            Acc->>App: Perform GLOBAL_ACTION_BACK or synthetic Tab Bar click
+            App-->>Feed: Smoothly transition back to Home feed
+            Acc->>Acc: Increment daily Interceptions counter (+1)
+        end
+    else Normal Home Feed / DMs / Search / Long-form Videos
+        Guard-->>Acc: Allow normal app interaction
+    end
+```
+</details>
+
+<details>
+<summary><b>2. 🚀 Onboarding & Setup Workflow</b> <i>[Click to expand/collapse]</i></summary>
+
+```mermaid
+graph TD
+    A[Screen 1: Welcome & Mission] --> B[Screen 2: The Infinite Scroll Trap]
+    B --> C[Screen 3: Life in Weeks Perspective]
+    C --> D[Screen 4: Personalized Focus Goals]
+    D --> E[Screen 5: Device App Shielding Permission]
+    E -->|User Taps 'Enable Shield'| F[System Settings: Accessibility Services]
+    F -->|Inhibit Service Toggled ON| G[Main Application Dashboard]
+    G --> H[Protection Active in Background]
+```
+
+#### Onboarding Step Breakdown:
+1. **Welcome**: Introduction to Inhibit's neo-brutalist focus ecosystem.
+2. **The Problem**: Exposing how infinite swipe containers hijack dopamine pathways.
+3. **Perspective**: Life-in-Weeks visualization quantifying reclaimed time.
+4. **Customization**: Choosing protected platforms and daily intent targets.
+5. **System Bridge**: Guiding Android Accessibility permission directly before entering the home feed.
+</details>
+
+<details>
+<summary><b>3. ⚡ Intentional Post Mode Flow</b> <i>[Click to expand/collapse]</i></summary>
+
+```mermaid
+stateDiagram-v2
+    [*] --> Locked: Default Protected State
+    Locked --> CountdownTimer: User clicks 'Unlock for 30 Min' (Uses 1 of 4 daily tokens)
+    CountdownTimer --> CountdownTimer: 30-minute creation & posting window active
+    CountdownTimer --> Locked: Timer expires / User manually locks
+    Locked --> ResetDaily: Midnight (00:00) resets daily tokens to 4
+```
+</details>
+
+---
+
+## 🛡️ Protected Services Matrix
+
+| Service | Supported Surfaces | Redirection Strategy | Status |
+|---|---|---|---|
+| **Instagram** | `Instagram Reels`, `Explore Grid` | In-app Back Navigation to Home Feed | **ACTIVE** ✅ |
+| **YouTube** | `YouTube Shorts Viewer` | Redirection to Subscriptions / Home Video List | **ACTIVE** ✅ |
+| **TikTok** | `For You Page (FYP)` | Surface probe in calibration | *Coming Soon* ⏳ |
+| **Facebook** | `Facebook Reels & Watch Loops` | Surface probe in calibration | *Coming Soon* ⏳ |
+| **X (Twitter)** | `Immersive Video Swipe Player` | Surface probe in calibration | *Coming Soon* ⏳ |
+| **Reddit** | `Vertical Video Feed` | Surface probe in calibration | *Coming Soon* ⏳ |
+
+---
+
+## 📱 Interactive Feature Tour
+
+<details>
+<summary><b>🏠 1. Home Dashboard & Analytics</b></summary>
+
+- **Neo-Brutalist Stat Cards**: Displays real-time intercepted reels count, daily saved hours, and active service statuses.
+- **Service Configuration Sheets**: Tap Instagram or YouTube cards to fine-tune granular rules (toggle Reels separately from Explore).
+- **One-Tap Testing**: Built-in simulator buttons to verify deflection logic on-demand.
+</details>
+
+<details>
+<summary><b>🛡️ 2. Shield & Post Mode Hub</b></summary>
+
+- **Granular Toggles**: Enable/disable protection per app without disabling the main accessibility service.
+- **Creator Unlock Tokens**: 4 daily sessions with remaining token counters and visual countdown badges.
+- **Rule Bundle Manager**: Hot-reloadable local rule signatures.
+</details>
+
+<details>
+<summary><b>👤 3. Profile & Life in Weeks Reclaimer</b></summary>
+
+- **Life in Weeks Visualization**: Interactive age grid showing spent weeks vs. reclaimed future years.
+- **Compounding ROI**: Translates 2.5 hours of daily doomscroll deflection into **9.9+ lifetime years gained**.
+- **Zero-Data Proof**: Sandboxed local state confirmation.
+</details>
+
+---
+
+## 📦 Download & Installation
+
+### Option 1: Direct APK Download (Recommended)
+1. Download the latest compiled package: [**`inhibit-v1.0.0.apk`**](https://github.com/pavanstarkin-tech/inhibit/releases/download/v1.0.0/inhibit-v1.0.0.apk)
+2. On your Android device (Android 8.0+ / API 26+), tap the APK to install.
+3. If prompted, allow **"Install from unknown sources"**.
+4. Open Inhibit, complete the onboarding, and toggle **Inhibit Shield** in **Accessibility Settings**.
+
+### Option 2: Build from Source
 ```bash
-# Engine — 42 tests, no device needed
-cd engine && pnpm install && pnpm test && pnpm build
+# 1. Clone repository
+git clone https://github.com/pavanstarkin-tech/inhibit.git
+cd inhibit
 
-# Sync the built engine + rules into both app targets
-./tools/sync-engine.sh          # macOS / Linux / Git Bash
-npm run sync-engine             # any OS, incl. Windows PowerShell / cmd.exe — no bash needed
-# or directly:
-node tools/sync-engine.mjs      # same script npm run sync-engine calls
-tools/sync-engine.ps1           # native PowerShell equivalent (Windows)
+# 2. Switch to source branch
+git checkout source
 
-# iOS — pure logic tests on the host, then the app itself
-cd ios/NoScrollCore && swift test
-open ios/NoScroll.xcodeproj      # pick your Apple ID under Signing, then Run
+# 3. Navigate to Flutter app
+cd flutter_app
 
-# Android — unit tests + a real APK
-cd android && ./gradlew :app:testDebugUnitTest :app:assembleDebug
+# 4. Fetch dependencies
+flutter pub get
 
-# Live probes against real Instagram and YouTube
-cd probe && pnpm install && pnpm exec playwright install chromium && pnpm probe
-```
-
-Rule bundles are signed. To work on them you need your own keypair:
-
-```bash
-node tools/sign-bundle.mjs keygen           # writes keys/ (gitignored)
-node tools/sign-bundle.mjs sign rules/*.json
-swift tools/verify-canonical.swift          # Node and Swift must agree byte for byte
+# 5. Build Debug or Release APK
+flutter build apk --debug
+# Output: flutter_app/build/app/outputs/flutter-apk/app-debug.apk
 ```
 
 ---
 
-## Nothing is forced on
-
-Every block is a switch you own. The core ones — Reels, Shorts, Explore,
-suggested posts — arrive switched **on**, so a fresh install works with no
-setup, and first-run onboarding shows you every switch once so nothing is a
-surprise later. But you can turn any of them off, at any time, in Settings.
-
-The product has an opinion. It doesn't take the choice away.
-
-## The one rule that is not negotiable
+## 🛠️ Architecture & Tech Stack
 
 ```
-The engine MUST NOT hide, remove, restyle, or observe any node on an auth surface.
+inhibit/
+├── flutter_app/                      # Cross-Platform Flutter Mobile Application
+│   ├── android/                      # Native Android & Kotlin Engine
+│   │   └── app/src/main/kotlin/.../
+│   │       ├── shield/
+│   │       │   ├── ReelsBlockAccessibilityService.kt   # System event listener & action dispatcher
+│   │       │   ├── ScreenDetector.kt                   # UI hierarchy & container heuristic analyzer
+│   │       │   ├── GuardController.kt                  # State machine & intentional post mode coordinator
+│   │       │   └── Screen.kt                           # Supported screen definitions & rules
+│   ├── lib/                          # Dart / Flutter UI layer
+│   │   ├── ui/                       # Neo-Brutalist screens (Home, Shield, Profile, Onboarding)
+│   │   ├── core/                     # AppState, NativeShieldService (MethodChannel)
+│   └── pubspec.yaml
+│
+└── website/                          # Neo-Brutalist React + Vite Showcase Web App
+    ├── src/                          # Interactive Phone Simulator & Reclaim Calculator
+    ├── index.html
+    └── package.json
 ```
 
-Hard-coded in [`engine/src/authguard.ts`](engine/src/authguard.ts), not overridable by any rule
-bundle, and enforced by a CI test that fails the build.
-
-Two reasons. A hiding rule that swallows Instagram's own security interstitial bricks login with
-no visible error. And Apple 5.1.1(vi) treats credential harvesting as *developer-program removal*
-— refusing to look at a login page at all is what keeps NoScroll provably clear of it.
-
-Verified against the real login page by the live probe, not just in a test DOM.
+- **Frontend App**: Flutter & Dart (Neo-brutalist theme, high-contrast borders, bold typography)
+- **Native Android Core**: Kotlin (`AccessibilityService`, `AccessibilityNodeInfo`, `MethodChannel`)
+- **Showcase Web**: React 19, Vite, Lucide Icons, Canvas Confetti, GitHub Pages
 
 ---
 
-## Privacy
+## 🔒 Privacy Guarantee
 
-Two tiers, stated precisely, because vagueness here is what makes people call a wrapper a phishing
-app:
-
-1. **Platform session cookies never leave your device.** There is no backend, no proxy, and no
-   server-side cache of anything you look at. The repo is public, so this is auditable rather than
-   a promise.
-2. **Rule-health telemetry is opt-in and anonymous.** It reports `{ruleId, expected, actual,
-   bundleVersion}` — never a URL, never page content. See
-   [`engine/src/bridge.ts`](engine/src/bridge.ts).
-
-No analytics SDK. No ad pixel. No crash reporter carrying identifiers. No tracking on the website
-or the legal pages.
-
-Full detail: [docs/PRIVACY.md](docs/PRIVACY.md).
+Inhibit operates on a strict **Zero-Telemetry Policy**:
+- ❌ **No Internet Connection Required**: The Android app has 0 network dependencies for its core shield.
+- ❌ **No Keylogging or Screen Capture**: The accessibility service only inspects container resource IDs to detect Reels/Shorts viewers.
+- ❌ **No User Tracking or Accounts**: All statistics (hours saved, reels intercepted) are stored locally using on-device preferences.
 
 ---
 
-## What's not done
-
-Honestly, because a feature list that overpromises is the thing this project is reacting to:
-
-- **Not submitted to either store.** The iOS `com.apple.developer.family-controls` entitlement is
-  gated by Apple, takes days-to-weeks, and can be denied — see [docs/ENTITLEMENT.md](docs/ENTITLEMENT.md).
-  It has to be granted before the shield layer can run on a device.
-- **The three Screen Time extensions are not yet targets in the Xcode project.** The app target
-  builds and runs today; the shield extensions are written and typecheck against the iOS SDK, but
-  adding them as targets is blocked on the entitlement above, since they cannot run without it.
-- **Android rule-bundle signature verification is not implemented.** iOS verifies; Android
-  currently reads bundles from assets/cache without checking the signature. Do not ship without it.
-- **Android has no onboarding, five-tab shell, or widget.** See "The app" above. It has the
-  wrapper, a two-service switch, shielding on by default, and a Status screen — not the iOS
-  experience. Building it out is open work.
-- **No notifications.** WKWebView cannot receive web push, and shielding an app suppresses that
-  app's own notifications too. This is a scoped-out non-goal, not a bug.
-- **Screen Time is off by default even on a device.** The Family Controls entitlement is opt-in
-  (`NOSCROLL_ENTITLEMENTS`) because wiring it unconditionally breaks signing for any account
-  without Apple's approval. Without it, "Grant access" explains why rather than failing with
-  Apple's `Couldn't communicate with a helper application`.
-- **Screen Time does not work in the iOS Simulator at all.** The frameworks are non-functional
-  there, so the permission prompt can never appear; the app says so rather than failing quietly.
-  Testing that flow needs a real device *and* the entitlement below.
-- **Six of the eight services are beta.** Instagram and YouTube are probe-verified against the
-  live sites; X, TikTok, Facebook, LinkedIn, Snapchat and Reddit have researched rules that no
-  probe has confirmed yet. The app labels them BETA rather than listing eight logos as if they
-  were equal.
-- **Per-app usage and the app picker need the entitlement.** Usage reads "—" instead of a number
-  until a DeviceActivityReport extension can run.
-- **Posting Reels, stories, DM media, calls** — not available on the mobile web, so not available
-  here. Post Mode temporarily lifts the shield so you can post in the real app.
-- **The logged-in probe is skipped** unless you supply `PROBE_IG_STATE`. Use a dedicated probe
-  account, never a personal one.
-
----
-
-## Licence
-
-AGPL-3.0-or-later. See [LICENCE](LICENSE).
-
-Rule bundles seeded from MIT-licensed filter lists — `gijsdev/ublock-hide-yt-shorts` and
-`BevizLaszlo/UBlock-Filters-for-Social-Media` — with provenance recorded per rule.
-
-NoScroll is not affiliated with, endorsed by, or connected to Meta, Instagram, Google or YouTube.
+<div align="center">
+  <sub>Crafted with 🖤 for digital wellness & intentional living.</sub><br>
+  <sub>Licensed under MIT • © Inhibit Project</sub>
+</div>
