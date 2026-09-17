@@ -102,11 +102,12 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div style={{ backgroundColor: 'var(--accent-yellow)', borderBottom: '2.5px solid #000', padding: '8px 16px', textAlign: 'center', fontSize: '12px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <span className="neo-badge green" style={{ fontSize: '9px', padding: '2px 6px' }}>v1.0.0 RELEASE</span>
-        <span>Zero Telemetry Android Shield — Instagram & YouTube protection active!</span>
-        <button onClick={() => setShowDownloadModal(true)} style={{ background: 'none', border: 'none', textDecoration: 'underline', fontWeight: 900, cursor: 'pointer', fontFamily: 'inherit' }}>Download APK →</button>
+      {/* 1. TOP ANNOUNCEMENT BAR (SINGLE ROW STRIP) */}
+      <div className="top-strip">
+        <span className="neo-badge green strip-badge">v1.0.0 RELEASE</span>
+        <span className="strip-text">Zero Telemetry Android Shield — Instagram & YouTube protection active!</span>
+        <span style={{ opacity: 0.5, flexShrink: 0 }}>•</span>
+        <button onClick={() => setShowDownloadModal(true)} className="strip-link">Download APK →</button>
       </div>
 
       {/* 2. NAVBAR */}
