@@ -314,45 +314,11 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
 
         syncPreferences()
 
-        val isScrollEvent = (eventType == AccessibilityEvent.TYPE_VIEW_SCROLLED)
-
         val snapshot = UiTreeSnapshot(root)
         detector.setSnapshot(snapshot)
 
-        // Compact INHIBIT_TREE diagnostic
-        val treeSig = "$effectivePkg|$eventType|true|$rootClass|$effectivePkg|${snapshot.nodeCount}|${snapshot.maxDepthReached}|${snapshot.truncated}"
-        val now = System.currentTimeMillis()
-        if (treeSig != lastLoggedTreeSig || now - lastLoggedTreeTime > 1500L) {
-            lastLoggedTreeSig = treeSig
-            lastLoggedTreeTime = now
-            Log.d("INHIBIT_TREE",
-                "pkg=$effectivePkg\n" +
-                "eventType=${AccessibilityEvent.eventTypeToString(eventType)}\n" +
-                "rootAvailable=true\n" +
-                "rootClass=$rootClass\n" +
-                "rootPackage=$effectivePkg\n" +
-                "nodeCount=${snapshot.nodeCount}\n" +
-                "maxDepthReached=${snapshot.maxDepthReached}\n" +
-                "truncated=${snapshot.truncated}"
-            )
-        }
-
-        // INHIBIT_TREE_EVIDENCE diagnostic for short-video inspection
-        val evidence = snapshot.extractMatchedEvidence(effectivePkg)
-        val evidenceSig = "$effectivePkg|${evidence.classes}|${evidence.ids}|${evidence.texts}|${evidence.descriptions}"
-        if (evidenceSig != lastLoggedEvidenceSig || now - lastLoggedEvidenceTime > 1500L) {
-            lastLoggedEvidenceSig = evidenceSig
-            lastLoggedEvidenceTime = now
-            Log.d("INHIBIT_TREE_EVIDENCE",
-                "pkg=$effectivePkg\n" +
-                "classes=${evidence.classes}\n" +
-                "ids=${evidence.ids}\n" +
-                "texts=${evidence.texts}\n" +
-                "descriptions=${evidence.descriptions}"
-            )
-        }
-
         val screen = detector.detectWithSnapshot(effectivePkg, eventClassName, snapshot)
+        val isVerticalScroll = isVerticalReelPagerScroll(event, screen)
 
         val sig = when (screen) {
             Screen.INSTAGRAM_REEL, Screen.INSTAGRAM_REEL_POSSIBLE -> detector.extractInstagramSignature(root)
@@ -360,9 +326,58 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
             else -> VideoSignature()
         }
 
-        guardController.onScreenDetected(screen, sig, isScrollEvent) { message, totalBlocked ->
+        guardController.onScreenDetected(screen, sig, isVerticalScroll) { message, totalBlocked ->
             redirectToHomeTab(effectivePkg, screen, message, totalBlocked)
         }
+    }
+
+    private fun isVerticalReelPagerScroll(event: AccessibilityEvent, screen: Screen): Boolean {
+        if (event.eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED) return false
+
+        val source = try { event.source } catch (_: Exception) { null }
+        val srcClass = source?.className?.toString().orEmpty().lowercase()
+        val srcId = source?.viewIdResourceName?.lowercase().orEmpty()
+
+        // 1. Explicitly ignore horizontal tickers, textviews, audio pills, seekbars, comments
+        if (srcClass.contains("textview") ||
+            srcClass.contains("horizontal") ||
+            srcClass.contains("marquee") ||
+            srcClass.contains("progressbar") ||
+            srcClass.contains("seekbar") ||
+            srcId.contains("music") ||
+            srcId.contains("audio") ||
+            srcId.contains("pill") ||
+            srcId.contains("ticker") ||
+            srcId.contains("comment") ||
+            srcId.contains("caption") ||
+            srcId.contains("search")
+        ) {
+            return false
+        }
+
+        // 2. Check if source is a ViewPager or vertical container for Reels / Shorts
+        val isPagerOrRecycler = srcClass.contains("viewpager") ||
+                                srcClass.contains("reboundviewpager") ||
+                                srcClass.contains("recyclerview") ||
+                                srcClass.contains("vertical") ||
+                                srcId.contains("reel_recycler") ||
+                                srcId.contains("shorts_container") ||
+                                srcId.contains("reel_viewer") ||
+                                srcId.contains("clips_pager")
+
+        if (isPagerOrRecycler) {
+            return true
+        }
+
+        // 3. Fallback: on Android 9+, check if scrollDeltaY is non-zero
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (event.scrollDeltaY != 0) {
+                return true
+            }
+        }
+
+        // 4. Default for confirmed Reel/Short screen when a view scrolled
+        return (screen == Screen.INSTAGRAM_REEL || screen == Screen.YOUTUBE_SHORT)
     }
 
     private var currentToast: Toast? = null
