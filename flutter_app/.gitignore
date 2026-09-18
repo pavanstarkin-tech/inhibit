@@ -49,3 +49,9 @@ build/
 **/.gradle/
 local.properties
 **/local.properties
+key.properties
+**/key.properties
+*.jks
+**/*.jks
+*.keystore
+**/*.keystore

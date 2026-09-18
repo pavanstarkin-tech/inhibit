@@ -13,3 +13,7 @@ test-results/
 playwright-report/
 results.json
 **/local.properties
+**/key.properties
+**/*.jks
+**/*.keystore
+

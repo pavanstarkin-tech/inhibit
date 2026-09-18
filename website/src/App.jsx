@@ -20,10 +20,18 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.inhibit.user';
+const GOOGLE_GROUP_URL = 'https://groups.google.com/g/skillup-1';
 const GITHUB_REPO = 'pavanstarkin-tech/inhibit-app';
-const FALLBACK_VERSION = 'v1.0.3';
+const FALLBACK_VERSION = 'v1.0.4';
 const FALLBACK_APK_URL = `https://github.com/${GITHUB_REPO}/releases/download/${FALLBACK_VERSION}/inhibit-${FALLBACK_VERSION}.apk`;
 const FALLBACK_RELEASE_URL = `https://github.com/${GITHUB_REPO}/releases/tag/${FALLBACK_VERSION}`;
+
+const PlayStoreIcon = ({ size = 20, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M3.609 1.814L13.793 12 3.61 22.186a2.38 2.38 0 0 1-.61-.926V2.74c.14-.367.35-.683.61-.926zm11.3 11.3l2.296 2.296-11.83 6.76 9.534-9.056zm0-2.228L5.375 1.83l11.83 6.76-2.296 2.296zm1.116 1.114l3.526 2.015c.995.568.995 1.5 0 2.068l-3.526 2.015-2.002-2.002 2.002-2.096z"/>
+  </svg>
+);
 
 const FacebookIcon = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -153,18 +161,18 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. TOP ANNOUNCEMENT BAR (INFINITE MARQUEE STRIP) */}
-      <div className="top-marquee-container" title="Click to download APK" onClick={() => setShowDownloadModal(true)}>
+      <div className="top-marquee-container" title="Get Inhibit on Google Play" onClick={() => setShowDownloadModal(true)}>
         <div className="top-marquee-track">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="marquee-item">
-              <span className="neo-badge green strip-badge">{releaseInfo.version} RELEASE</span>
-              <span>⚡ Zero Telemetry Android Shield — Instagram Reels & YouTube Shorts auto-redirection active!</span>
+              <span className="neo-badge green strip-badge">PLAY STORE LIVE</span>
+              <span>🎉 Inhibit is now live on Google Play Store (Closed Testing)! Join testing group for instant access.</span>
               <span style={{ opacity: 0.5 }}>•</span>
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowDownloadModal(true); }} 
                 className="strip-link"
               >
-                Download APK ({releaseInfo.version}) →
+                Get on Google Play →
               </button>
               <span style={{ opacity: 0.4 }}>✦</span>
             </div>
@@ -197,10 +205,10 @@ export default function App() {
             <button 
               onClick={() => setShowDownloadModal(true)}
               className="neo-btn"
-              style={{ padding: '8px 14px', fontSize: '13px' }}
+              style={{ padding: '8px 14px', fontSize: '13px', backgroundColor: 'var(--accent-yellow)' }}
             >
-              <Download size={15} />
-              <span>Get APK ({releaseInfo.version})</span>
+              <PlayStoreIcon size={15} />
+              <span>Get on Play Store</span>
             </button>
 
             {/* Mobile Hamburger Toggle */}
@@ -290,9 +298,20 @@ export default function App() {
                 className="neo-btn"
                 style={{ fontSize: '15px', padding: '12px 20px', backgroundColor: 'var(--accent-yellow)' }}
               >
-                <Download size={18} />
-                <span>Download Inhibit {releaseInfo.version}</span>
+                <PlayStoreIcon size={18} />
+                <span>Get on Google Play</span>
               </button>
+
+              <a 
+                href={GOOGLE_GROUP_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="neo-btn white"
+                style={{ fontSize: '15px', padding: '12px 20px', textDecoration: 'none' }}
+              >
+                <ExternalLink size={18} />
+                <span>Join Testing Group</span>
+              </a>
 
               <button 
                 onClick={triggerSimulation}
@@ -300,7 +319,7 @@ export default function App() {
                 style={{ fontSize: '15px', padding: '12px 20px' }}
               >
                 <Zap size={18} />
-                <span>Test Live Simulation</span>
+                <span>Live Demo</span>
               </button>
             </div>
 
@@ -1031,48 +1050,60 @@ export default function App() {
       <section id="download" style={{ padding: '80px 20px', borderBottom: '2.5px solid #000', backgroundColor: 'var(--accent-green)' }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }} className="neo-card">
           <div style={{ padding: '40px 32px', backgroundColor: '#fff', borderRadius: '12px', textAlign: 'center' }}>
-            <span className="neo-badge green" style={{ marginBottom: '10px' }}>GET STARTED IN 60 SECONDS</span>
+            <span className="neo-badge green" style={{ marginBottom: '10px' }}>OFFICIAL RELEASE</span>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, marginBottom: '12px' }}>Install Inhibit for Android</h2>
-            <p style={{ fontSize: '15px', fontWeight: 700, color: '#555', maxWidth: '580px', margin: '0 auto 30px' }}>
-              Ready to reclaim your attention and live more? Download the open release package and set up your device shield today.
+            <p style={{ fontSize: '15px', fontWeight: 700, color: '#555', maxWidth: '620px', margin: '0 auto 30px' }}>
+              Inhibit is published on the <strong>Google Play Store</strong> under Closed Testing with full Accessibility clearance. Install in 2 simple steps, or download the direct APK below!
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '36px', flexWrap: 'wrap' }}>
-              <button 
-                onClick={() => setShowDownloadModal(true)}
-                className="neo-btn"
-                style={{ fontSize: '16px', padding: '14px 28px', backgroundColor: 'var(--accent-yellow)' }}
-              >
-                <Download size={20} />
-                <span>Download Inhibit APK ({releaseInfo.version})</span>
-              </button>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '36px', flexWrap: 'wrap' }}>
               <a 
-                href={releaseInfo.releaseUrl} 
+                href={GOOGLE_GROUP_URL} 
                 target="_blank" 
                 rel="noreferrer"
-                className="neo-btn white"
-                style={{ fontSize: '16px', padding: '14px 28px' }}
+                className="neo-btn"
+                style={{ fontSize: '15px', padding: '14px 22px', backgroundColor: 'var(--accent-pink)', textDecoration: 'none' }}
               >
-                <ExternalLink size={20} />
-                <span>GitHub Releases</span>
+                <ExternalLink size={18} />
+                <span>1. Join Testing Group</span>
               </a>
+
+              <a 
+                href={PLAY_STORE_URL} 
+                target="_blank" 
+                rel="noreferrer"
+                className="neo-btn"
+                style={{ fontSize: '15px', padding: '14px 22px', backgroundColor: 'var(--accent-yellow)', textDecoration: 'none' }}
+              >
+                <PlayStoreIcon size={18} />
+                <span>2. Open Google Play Store</span>
+              </a>
+
+              <button 
+                onClick={() => setShowDownloadModal(true)}
+                className="neo-btn white"
+                style={{ fontSize: '15px', padding: '14px 22px' }}
+              >
+                <Download size={18} />
+                <span>Direct APK / Options</span>
+              </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', textAlign: 'left' }}>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 1</div>
-                <div style={{ fontWeight: 900, fontSize: '14px' }}>Download APK</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Download the verified <code>{releaseInfo.apkName}</code> release package.</p>
+                <div style={{ fontWeight: 900, fontSize: '14px' }}>Join Google Group</div>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Join <a href={GOOGLE_GROUP_URL} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>skillup-1 Google Group</a> with your Google Play email.</p>
               </div>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 2</div>
-                <div style={{ fontWeight: 900, fontSize: '14px' }}>Allow Unknown Apps</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Tap install and accept installation from your browser/files.</p>
+                <div style={{ fontWeight: 900, fontSize: '14px' }}>Install from Play Store</div>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Open <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>Play Store Listing</a> to download the verified app.</p>
               </div>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 3</div>
                 <div style={{ fontWeight: 900, fontSize: '14px' }}>Turn On Shield</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Complete Step 5 in onboarding to turn on Inhibit Shield in Accessibility.</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Enable Inhibit Shield in Android Accessibility to begin auto-redirection.</p>
               </div>
             </div>
           </div>
@@ -1091,8 +1122,12 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: 800, fontSize: '13px', flexWrap: 'wrap' }}>
-            <a href="#features" style={{ color: '#000', textDecoration: 'none' }}>Features</a>
-            <a href="#services" style={{ color: '#000', textDecoration: 'none' }}>Services</a>
+            <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Google Play <ExternalLink size={14} />
+            </a>
+            <a href={GOOGLE_GROUP_URL} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Testing Group <ExternalLink size={14} />
+            </a>
             <a href="./privacy.html" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a>
             <a href="./terms.html" style={{ color: '#000', textDecoration: 'underline' }}>Terms</a>
             <a href="./faq.html" style={{ color: '#000', textDecoration: 'underline' }}>FAQs</a>
@@ -1113,7 +1148,7 @@ export default function App() {
       {/* 11. DOWNLOAD MODAL */}
       {showDownloadModal && (
         <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
-          <div className="neo-card" style={{ padding: '28px', backgroundColor: '#FFFDF0', maxWidth: '480px', width: '100%', position: 'relative' }}>
+          <div className="neo-card" style={{ padding: '28px', backgroundColor: '#FFFDF0', maxWidth: '520px', width: '100%', position: 'relative' }}>
             <button 
               onClick={() => setShowDownloadModal(false)}
               style={{ position: 'absolute', top: '16px', right: '16px', width: '32px', height: '32px', borderRadius: '8px', border: '2px solid #000', backgroundColor: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, cursor: 'pointer', boxShadow: '2px 2px 0px #000' }}
@@ -1123,48 +1158,77 @@ export default function App() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div style={{ width: '40px', height: '40px', borderRadius: '8px', backgroundColor: 'var(--accent-yellow)', border: '2px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Download size={20} />
+                <PlayStoreIcon size={22} />
               </div>
               <div>
-                <h3 style={{ fontSize: '20px', fontWeight: 900 }}>Download Inhibit</h3>
-                <span className="neo-badge green" style={{ fontSize: '10px' }}>{releaseInfo.version} RELEASE</span>
+                <h3 style={{ fontSize: '20px', fontWeight: 900 }}>Get Inhibit for Android</h3>
+                <span className="neo-badge green" style={{ fontSize: '10px' }}>GOOGLE PLAY & APK AVAILABLE</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', fontWeight: 700, color: '#444', marginBottom: '20px' }}>
-              <div style={{ padding: '12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Target Architecture & Package</div>
-                <div style={{ color: '#000', fontWeight: 800 }}>Android 8.0+ (com.inhibit.user)</div>
+            {/* Play Store 2-Step Card */}
+            <div style={{ padding: '14px', backgroundColor: '#fff', border: '2px solid #000', borderRadius: '10px', marginBottom: '14px', boxShadow: '2px 2px 0px #000' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                <span className="neo-badge yellow" style={{ fontSize: '10px' }}>RECOMMENDED</span>
+                <span style={{ fontWeight: 900, fontSize: '13px' }}>Google Play Store (Closed Testing)</span>
               </div>
-              <div style={{ padding: '12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Security & Privacy Guarantee</div>
-                <div style={{ color: '#000', fontWeight: 800 }}>100% Local Sandboxed Engine • Zero Network Requests</div>
+              <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginBottom: '12px', lineHeight: 1.4 }}>
+                To install from Google Play closed testing, join the tester group first. After joining, the Play Store download link unlocks automatically:
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <a 
+                  href={GOOGLE_GROUP_URL} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="neo-btn"
+                  style={{ padding: '10px 14px', backgroundColor: 'var(--accent-pink)', width: '100%', textAlign: 'center', textDecoration: 'none', fontSize: '13px' }}
+                >
+                  <ExternalLink size={16} />
+                  <span>Step 1: Join Google Group for Access</span>
+                </a>
+                <a 
+                  href={PLAY_STORE_URL} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="neo-btn"
+                  style={{ padding: '10px 14px', backgroundColor: 'var(--accent-yellow)', width: '100%', textAlign: 'center', textDecoration: 'none', fontSize: '13px' }}
+                >
+                  <PlayStoreIcon size={16} />
+                  <span>Step 2: Open on Google Play Store</span>
+                </a>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <a 
-                href={releaseInfo.apkUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                download={releaseInfo.apkName}
-                className="neo-btn"
-                style={{ padding: '12px', backgroundColor: 'var(--accent-yellow)', width: '100%', textAlign: 'center', textDecoration: 'none' }}
-              >
-                <Download size={18} />
-                <span>Direct APK Download ({releaseInfo.version})</span>
-              </a>
+            {/* Direct APK Card */}
+            <div style={{ padding: '14px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '10px', marginBottom: '14px' }}>
+              <div style={{ fontWeight: 900, fontSize: '12px', color: '#333', marginBottom: '6px' }}>Alternative: Direct Standalone APK ({releaseInfo.version})</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <a 
+                  href={releaseInfo.apkUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  download={releaseInfo.apkName}
+                  className="neo-btn green"
+                  style={{ padding: '10px 12px', flex: 1, textAlign: 'center', textDecoration: 'none', fontSize: '12px' }}
+                >
+                  <Download size={15} />
+                  <span>Download APK</span>
+                </a>
+                <a 
+                  href={releaseInfo.releaseUrl} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="neo-btn white"
+                  style={{ padding: '10px 12px', flex: 1, textAlign: 'center', textDecoration: 'none', fontSize: '12px' }}
+                >
+                  <ExternalLink size={15} />
+                  <span>GitHub Releases</span>
+                </a>
+              </div>
+            </div>
 
-              <a 
-                href={releaseInfo.releaseUrl} 
-                target="_blank" 
-                rel="noreferrer"
-                className="neo-btn white"
-                style={{ padding: '12px', width: '100%', textAlign: 'center', textDecoration: 'none' }}
-              >
-                <ExternalLink size={18} />
-                <span>View Release on GitHub</span>
-              </a>
+            <div style={{ fontSize: '11px', fontWeight: 700, color: '#777', textAlign: 'center' }}>
+              Package: <code>com.inhibit.user</code> • 100% Local Sandboxed Engine • Zero Network Tracking
             </div>
           </div>
         </div>
@@ -1175,11 +1239,11 @@ export default function App() {
         <button 
           onClick={() => setShowDownloadModal(true)}
           className="floating-download-btn"
-          aria-label="Download Inhibit APK"
+          aria-label="Get Inhibit on Google Play or APK"
         >
           <span className="pulse-dot"></span>
-          <Download size={18} />
-          <span>Get APK ({releaseInfo.version})</span>
+          <PlayStoreIcon size={18} />
+          <span>Get on Google Play</span>
         </button>
       </div>
     </div>

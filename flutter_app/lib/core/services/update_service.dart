@@ -32,6 +32,8 @@ class UpdateService {
   static const String _primaryRepo = 'pavanstarkin-tech/inhibit-app';
   static const String _fallbackRepo = 'pavanstarkin-tech/inhibit';
   static const String defaultAppVersion = '1.0.4';
+  static const String playStoreUrl = 'https://play.google.com/store/apps/details?id=com.inhibit.user';
+  static const String googleGroupUrl = 'https://groups.google.com/g/skillup-1';
   static String? _cachedVersion;
 
   /// Retrieves the true dynamic app version from the device package metadata
@@ -87,35 +89,36 @@ class UpdateService {
 
       final response = await request.close();
       if (response.statusCode == 200) {
-        final responseBody = await response.transform(utf8.decoder).join();
-        final data = jsonDecode(responseBody) as Map<String, dynamic>;
+        final body = await response.transform(utf8.decoder).join();
+        final json = jsonDecode(body) as Map<String, dynamic>;
 
-        final tagName = (data['tag_name'] as String? ?? '').replaceFirst('v', '').trim();
-        final releaseName = data['name'] as String? ?? 'Release v$tagName';
-        final releaseNotes = data['body'] as String? ?? 'New improvements and bug fixes.';
-        final htmlUrl = data['html_url'] as String? ?? 'https://github.com/$repo/releases';
-        final publishedAt = data['published_at'] as String?;
+        final tagName = json['tag_name'] as String? ?? '';
+        final latestVersion = tagName.replaceAll(RegExp(r'^[vV]'), '').trim();
+        final releaseName = json['name'] as String? ?? 'New Release';
+        final releaseNotes = json['body'] as String? ?? '';
+        final htmlUrl = json['html_url'] as String? ?? 'https://github.com/$repo/releases';
+        final publishedAt = json['published_at'] as String?;
 
         String downloadUrl = '';
-        final assets = data['assets'] as List<dynamic>?;
-        if (assets != null && assets.isNotEmpty) {
-          final apkAsset = assets.firstWhere(
-            (a) => (a['name'] as String? ?? '').endsWith('.apk'),
-            orElse: () => assets.first,
-          );
-          downloadUrl = apkAsset['browser_download_url'] as String? ?? '';
+        if (json.containsKey('assets') && json['assets'] is List) {
+          final assets = json['assets'] as List;
+          for (final asset in assets) {
+            if (asset is Map<String, dynamic>) {
+              final name = (asset['name'] as String? ?? '').toLowerCase();
+              if (name.endsWith('.apk')) {
+                downloadUrl = asset['browser_download_url'] as String? ?? '';
+                break;
+              }
+            }
+          }
         }
 
-        if (downloadUrl.isEmpty) {
-          downloadUrl = 'https://github.com/$repo/releases/download/v$tagName/inhibit-v$tagName.apk';
-        }
-
-        final bool isNewer = _isVersionNewer(currentVersion, tagName);
+        final isNewer = _isVersionNewer(currentVersion, latestVersion);
 
         return AppUpdateInfo(
           hasUpdate: isNewer,
           currentVersion: currentVersion,
-          latestVersion: tagName.isEmpty ? currentVersion : tagName,
+          latestVersion: latestVersion.isNotEmpty ? latestVersion : currentVersion,
           releaseName: releaseName,
           releaseNotes: releaseNotes,
           downloadUrl: downloadUrl,
@@ -153,11 +156,12 @@ class UpdateService {
     }
   }
 
-  /// Shows an interactive NeoBrutalist update dialog with release notes & download button
+  /// Shows an interactive NeoBrutalist update dialog with release notes & dual update options
   static void showUpdateDialog({
     required BuildContext context,
     required AppUpdateInfo update,
     required VoidCallback onDownload,
+    VoidCallback? onPlayStore,
   }) {
     showDialog(
       context: context,
@@ -176,10 +180,10 @@ class UpdateService {
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: AppTheme.borderBlack, width: 2),
               ),
-              child: const Text('UPDATE', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+              child: const Text('UPDATE AVAILABLE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
             ),
             const SizedBox(width: 8),
-            Text('v${update.latestVersion}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            Text('v${update.latestVersion}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
           ],
         ),
         content: SingleChildScrollView(
@@ -189,7 +193,7 @@ class UpdateService {
             children: [
               Text(
                 update.releaseName,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.black),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.black),
               ),
               const SizedBox(height: 8),
               Container(
@@ -201,7 +205,7 @@ class UpdateService {
                   border: Border.all(color: AppTheme.borderBlack, width: 1.5),
                 ),
                 child: Text(
-                  update.releaseNotes.isNotEmpty ? update.releaseNotes : 'Performance improvements and bug fixes.',
+                  update.releaseNotes.isNotEmpty ? update.releaseNotes : 'Performance improvements, Play Store compliance, and latest shield rules.',
                   style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF333333)),
                 ),
               ),
@@ -210,6 +214,40 @@ class UpdateService {
                 'Current installed: v${update.currentVersion}',
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF777777)),
               ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: NeoButton(
+                      text: 'PLAY STORE',
+                      backgroundColor: AppTheme.accentYellow,
+                      textColor: Colors.black,
+                      height: 38,
+                      fontSize: 11,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        if (onPlayStore != null) {
+                          onPlayStore();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: NeoButton(
+                      text: 'DIRECT APK',
+                      backgroundColor: AppTheme.accentGreen,
+                      textColor: Colors.black,
+                      height: 38,
+                      fontSize: 11,
+                      onPressed: () {
+                        Navigator.of(ctx).pop();
+                        onDownload();
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -217,17 +255,6 @@ class UpdateService {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('LATER', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
-          ),
-          NeoButton(
-            text: 'DOWNLOAD APK →',
-            backgroundColor: AppTheme.accentGreen,
-            textColor: Colors.black,
-            height: 40,
-            fontSize: 12,
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              onDownload();
-            },
           ),
         ],
       ),

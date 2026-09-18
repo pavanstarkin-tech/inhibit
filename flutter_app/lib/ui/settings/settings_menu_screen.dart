@@ -105,6 +105,28 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
               const SizedBox(height: 12),
 
               _buildMenuItem(
+                icon: Icons.shop_two_outlined,
+                iconBg: AppTheme.accentYellow,
+                title: 'Google Play Store',
+                badgeText: 'Live Track',
+                onTap: () async {
+                  await NativeShieldService.openUrl(UpdateService.playStoreUrl);
+                },
+              ),
+              const SizedBox(height: 12),
+
+              _buildMenuItem(
+                icon: Icons.group_add_outlined,
+                iconBg: const Color(0xFFBAE6FD),
+                title: 'Join Testing Group',
+                badgeText: 'Google Group',
+                onTap: () async {
+                  await NativeShieldService.openUrl(UpdateService.googleGroupUrl);
+                },
+              ),
+              const SizedBox(height: 12),
+
+              _buildMenuItem(
                 icon: Icons.tour_outlined,
                 iconBg: const Color(0xFFC7D2FE),
                 title: 'Replay Welcome Tour',
@@ -269,6 +291,7 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
         context: context,
         update: info,
         onDownload: () => NativeShieldService.openUrl(info.downloadUrl.isNotEmpty ? info.downloadUrl : info.releaseUrl),
+        onPlayStore: () => NativeShieldService.openUrl(UpdateService.playStoreUrl),
       );
     } else {
       showDialog(
