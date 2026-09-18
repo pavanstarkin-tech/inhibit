@@ -6,13 +6,35 @@ import '../components/neo_card.dart';
 import '../onboarding/onboarding_flow.dart';
 import '../theme/app_theme.dart';
 
-class SettingsMenuScreen extends StatelessWidget {
+class SettingsMenuScreen extends StatefulWidget {
   final AppState appState;
 
   const SettingsMenuScreen({
     super.key,
     required this.appState,
   });
+
+  @override
+  State<SettingsMenuScreen> createState() => _SettingsMenuScreenState();
+}
+
+class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
+  String _installedVersion = '1.0.4';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final v = await UpdateService.getInstalledVersion();
+    if (mounted) {
+      setState(() {
+        _installedVersion = v;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,9 +86,9 @@ class SettingsMenuScreen extends StatelessWidget {
                 icon: Icons.system_update_alt_rounded,
                 iconBg: AppTheme.accentYellow,
                 title: 'Check for Updates',
-                badgeText: appState.isCheckingForUpdates
+                badgeText: widget.appState.isCheckingForUpdates
                     ? 'Checking...'
-                    : (appState.availableUpdate != null ? 'NEW V${appState.availableUpdate!.latestVersion}' : 'GitHub Release'),
+                    : (widget.appState.availableUpdate != null ? 'NEW V${widget.appState.availableUpdate!.latestVersion}' : 'GitHub Release'),
                 onTap: () => _handleCheckForUpdates(context),
               ),
               const SizedBox(height: 12),
@@ -92,7 +114,7 @@ class SettingsMenuScreen extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (_) => Scaffold(
                         body: OnboardingFlow(
-                          appState: appState,
+                          appState: widget.appState,
                           onComplete: () => Navigator.of(context).pop(),
                         ),
                       ),
@@ -106,7 +128,7 @@ class SettingsMenuScreen extends StatelessWidget {
                 icon: Icons.info_outline_rounded,
                 iconBg: const Color(0xFFE2E8F0),
                 title: 'About Inhibit',
-                badgeText: 'v1.0.3',
+                badgeText: 'v$_installedVersion',
                 onTap: () => _showAboutDialog(context),
               ),
               const SizedBox(height: 12),
@@ -216,10 +238,10 @@ class SettingsMenuScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           side: const BorderSide(color: Colors.black, width: 3),
         ),
-        title: const Text('Inhibit v1.0.0', style: TextStyle(fontWeight: FontWeight.w900)),
-        content: const Text(
-          'Inhibit runs a local, sandboxed, distraction-free engine directly on your device. Zero telemetry, zero cloud tracking, zero algorithms.\n\nSame social media. A better you.',
-          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+        title: Text('Inhibit v$_installedVersion', style: const TextStyle(fontWeight: FontWeight.w900)),
+        content: Text(
+          'Inhibit v$_installedVersion runs a local, sandboxed, distraction-free engine directly on your device. Zero telemetry, zero cloud tracking, zero algorithms.\n\nSame social media. A better you.',
+          style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
         ),
         actions: [
           TextButton(
@@ -239,7 +261,7 @@ class SettingsMenuScreen extends StatelessWidget {
       ),
     );
 
-    final info = await appState.checkForAppUpdates(manual: true);
+    final info = await widget.appState.checkForAppUpdates(manual: true);
     if (!context.mounted) return;
 
     if (info.hasUpdate) {
@@ -285,7 +307,7 @@ class SettingsMenuScreen extends StatelessWidget {
         title: const Text('Privacy & Terms', style: TextStyle(fontWeight: FontWeight.w900)),
         content: const Text(
           '1. Inhibit does not collect or transmit your personal data.\n2. All detection and shield rules execute entirely locally on your device.\n3. Accessibility service permissions are strictly used to intercept short-form doomscrolling loops (Reels & Shorts).\n4. You remain in full control of all shield rules at all times.',
-          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
         ),
         actions: [
           TextButton(

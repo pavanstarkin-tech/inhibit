@@ -1093,12 +1093,12 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: 800, fontSize: '13px', flexWrap: 'wrap' }}>
             <a href="#features" style={{ color: '#000', textDecoration: 'none' }}>Features</a>
             <a href="#services" style={{ color: '#000', textDecoration: 'none' }}>Services</a>
-            <a href="/privacy.html" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a>
-            <a href="/terms.html" style={{ color: '#000', textDecoration: 'underline' }}>Terms</a>
-            <a href="/faq.html" style={{ color: '#000', textDecoration: 'underline' }}>FAQs</a>
-            <a href="/data-safety.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Safety</a>
-            <a href="/data-deletion.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Deletion</a>
-            <a href="/accessibility.html" style={{ color: '#000', textDecoration: 'underline' }}>Accessibility Guide</a>
+            <a href="./privacy.html" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a>
+            <a href="./terms.html" style={{ color: '#000', textDecoration: 'underline' }}>Terms</a>
+            <a href="./faq.html" style={{ color: '#000', textDecoration: 'underline' }}>FAQs</a>
+            <a href="./data-safety.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Safety</a>
+            <a href="./data-deletion.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Deletion</a>
+            <a href="./accessibility.html" style={{ color: '#000', textDecoration: 'underline' }}>Accessibility Guide</a>
             <a href="https://github.com/pavanstarkin-tech/inhibit-app" target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               GitHub <ExternalLink size={14} />
             </a>

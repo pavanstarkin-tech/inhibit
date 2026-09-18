@@ -206,32 +206,18 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
 
         const SizedBox(height: 12),
 
-        // Center Hero Welcome Art Card
+        // Center Hero Welcome Art (clean image without border/background)
         Expanded(
           child: Center(
-            child: Container(
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.borderBlack, width: 3),
-                boxShadow: AppTheme.hardShadow(offset: const Offset(4, 4)),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(13),
-                child: Image.asset(
-                  'assets/images/welcome.png',
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: AppTheme.accentYellow,
-                    padding: const EdgeInsets.all(20),
-                    child: const Center(
-                      child: Text(
-                        'SOCIAL MEDIA ON YOUR TERMS',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
-                      ),
-                    ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Image.asset(
+                'assets/images/welcome.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Text(
+                    'SOCIAL MEDIA ON YOUR TERMS',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
                   ),
                 ),
               ),

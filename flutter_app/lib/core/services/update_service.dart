@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../../ui/theme/app_theme.dart';
 import '../../ui/components/neo_button.dart';
 
@@ -30,15 +31,31 @@ class AppUpdateInfo {
 class UpdateService {
   static const String _primaryRepo = 'pavanstarkin-tech/inhibit-app';
   static const String _fallbackRepo = 'pavanstarkin-tech/inhibit';
-  static const String currentAppVersion = '1.0.0';
+  static const String defaultAppVersion = '1.0.4';
+  static String? _cachedVersion;
+
+  /// Retrieves the true dynamic app version from the device package metadata
+  static Future<String> getInstalledVersion() async {
+    if (_cachedVersion != null && _cachedVersion!.isNotEmpty) {
+      return _cachedVersion!;
+    }
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      _cachedVersion = packageInfo.version;
+      return packageInfo.version;
+    } catch (_) {
+      return defaultAppVersion;
+    }
+  }
 
   /// Checks GitHub Releases for a newer version of the application
-  static Future<AppUpdateInfo> checkForUpdate({String currentVersion = currentAppVersion}) async {
+  static Future<AppUpdateInfo> checkForUpdate({String? currentVersion}) async {
+    final activeVersion = currentVersion ?? await getInstalledVersion();
     final repos = [_primaryRepo, _fallbackRepo];
 
     for (final repo in repos) {
       try {
-        final info = await _fetchLatestRelease(repo, currentVersion);
+        final info = await _fetchLatestRelease(repo, activeVersion);
         if (info != null) {
           return info;
         }
@@ -49,8 +66,8 @@ class UpdateService {
 
     return AppUpdateInfo(
       hasUpdate: false,
-      currentVersion: currentVersion,
-      latestVersion: currentVersion,
+      currentVersion: activeVersion,
+      latestVersion: activeVersion,
       releaseName: 'Up to date',
       releaseNotes: 'You are running the latest version of Inhibit.',
       downloadUrl: '',

@@ -442,8 +442,8 @@ class AppState extends ChangeNotifier {
       notifyListeners();
       return const AppUpdateInfo(
         hasUpdate: false,
-        currentVersion: UpdateService.currentAppVersion,
-        latestVersion: UpdateService.currentAppVersion,
+        currentVersion: UpdateService.defaultAppVersion,
+        latestVersion: UpdateService.defaultAppVersion,
         releaseName: 'Check failed',
         releaseNotes: 'Could not connect to GitHub releases.',
         downloadUrl: '',
