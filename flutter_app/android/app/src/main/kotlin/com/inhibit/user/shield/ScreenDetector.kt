@@ -1,4 +1,4 @@
-﻿package com.inhibit.user.shield
+package com.inhibit.user.shield
 
 import android.graphics.Rect
 import android.util.Log
@@ -460,6 +460,28 @@ class ScreenDetector {
             reasons.add("clips_class")
         }
 
+        // Hard Exclusion: Stories viewer & story progress bars are ALWAYS safe and never Reels
+        val hasStoryElements = snapshot.hasIdAny("reel_viewer_progress_bar", "story_progress", "story_viewer_container", "direct_story_reply", "story_reply_composer") ||
+                               snapshot.hasDescAny("reply to story", "send message to")
+
+        if (hasStoryElements) {
+            return InstagramEvaluation(
+                score = 0,
+                hasStrongStructure = false,
+                hasSupportingEvidence = false,
+                hasClipsClass = false,
+                hasVideoContainer = false,
+                hasViewPager = false,
+                hasReelsIndicator = false,
+                hasAuthorName = false,
+                hasAudioTrack = false,
+                hasLike = false,
+                hasComment = false,
+                hasShare = false,
+                reasons = listOf("story_viewer_exclusion")
+            )
+        }
+
         // Hard Exclusion: Active Stories tray / Suggested Reels carousel / Grid layout unequivocally indicates Home/Explore
         val hasStoriesTray = snapshot.hasIdAny("tray_recycler_view", "stories_container", "reel_tray_container", "reels_tray_container", "stories_tray") ||
                              snapshot.hasDescContaining("reels tray container") ||
@@ -665,18 +687,59 @@ class ScreenDetector {
     }
 
     private fun isStoryActive(className: String, snapshot: UiTreeSnapshot): Boolean {
+        // 1. Story Viewer Classes & Activities
         if (className.contains("StoryViewer", ignoreCase = true) ||
-            className.contains("StatusViewer", ignoreCase = true)
+            className.contains("StatusViewer", ignoreCase = true) ||
+            className.contains("ReelViewerFragment", ignoreCase = true) ||
+            className.contains("StoryViewerFragment", ignoreCase = true) ||
+            className.contains("StoryViewerActivity", ignoreCase = true)
+        ) {
+            // If it has story progress bars or story reply bar, it's definitely a Story
+            if (snapshot.hasIdAny("reel_viewer_progress_bar", "story_progress", "story_viewer_container", "message_composer_container", "direct_story_reply", "send_message_bar")) {
+                return true
+            }
+        }
+
+        // 2. Story / Post Creation, Camera, and Upload Flows
+        if (className.contains("CameraActivity", ignoreCase = true) ||
+            className.contains("CreationActivity", ignoreCase = true) ||
+            className.contains("CaptureActivity", ignoreCase = true) ||
+            className.contains("GalleryActivity", ignoreCase = true) ||
+            className.contains("MediaCaptureActivity", ignoreCase = true) ||
+            className.contains("QuickCamActivity", ignoreCase = true) ||
+            className.contains("CreationCameraFragment", ignoreCase = true) ||
+            className.contains("StoryCreationActivity", ignoreCase = true) ||
+            className.contains("DirectStoryReplyActivity", ignoreCase = true)
         ) {
             return true
         }
 
-        return snapshot.hasIdAny(
+        // 3. Story progress bars and reply composer IDs
+        if (snapshot.hasIdAny(
             "story_progress",
             "story_viewer_container",
             "reel_viewer_progress_bar",
-            "reel_viewer_tall_story_cover"
-        )
+            "reel_viewer_tall_story_cover",
+            "direct_story_reply",
+            "story_reply_composer",
+            "camera_shutter_button",
+            "gallery_grid",
+            "story_capture_button",
+            "post_capture_button",
+            "share_to_story_button",
+            "your_story_button",
+            "close_friends_button",
+            "story_share_sheet"
+        )) {
+            return true
+        }
+
+        // 4. Content descriptions for Story interactions
+        if (snapshot.hasDescAny("reply to story", "send message to", "your story", "story reactions", "share to your story", "take a story photo", "record a story")) {
+            return true
+        }
+
+        return false
     }
 
     private fun isProfileActive(snapshot: UiTreeSnapshot): Boolean {

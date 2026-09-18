@@ -1040,17 +1040,22 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '24px', fontWeight: 800, fontSize: '14px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: 800, fontSize: '13px', flexWrap: 'wrap' }}>
             <a href="#features" style={{ color: '#000', textDecoration: 'none' }}>Features</a>
             <a href="#services" style={{ color: '#000', textDecoration: 'none' }}>Services</a>
-            <a href="#privacy" style={{ color: '#000', textDecoration: 'none' }}>Privacy</a>
-            <a href="https://github.com/pavanstarkin-tech/inhibit" target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <a href="/privacy.html" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a>
+            <a href="/terms.html" style={{ color: '#000', textDecoration: 'underline' }}>Terms</a>
+            <a href="/faq.html" style={{ color: '#000', textDecoration: 'underline' }}>FAQs</a>
+            <a href="/data-safety.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Safety</a>
+            <a href="/data-deletion.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Deletion</a>
+            <a href="/accessibility.html" style={{ color: '#000', textDecoration: 'underline' }}>Accessibility Guide</a>
+            <a href="https://github.com/pavanstarkin-tech/inhibit-app" target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               GitHub <ExternalLink size={14} />
             </a>
           </div>
 
           <div style={{ fontSize: '12px', fontWeight: 700, color: '#777' }}>
-            © {new Date().getFullYear()} Inhibit Project. Open Source & Zero Telemetry.
+            © {new Date().getFullYear()} Inhibit Project (com.inhibit.user). Open Source & Zero Telemetry.
           </div>
         </div>
       </footer>
@@ -1072,36 +1077,36 @@ export default function App() {
               </div>
               <div>
                 <h3 style={{ fontSize: '20px', fontWeight: 900 }}>Download Inhibit</h3>
-                <span className="neo-badge green" style={{ fontSize: '10px' }}>v1.0.0 RELEASE</span>
+                <span className="neo-badge green" style={{ fontSize: '10px' }}>v1.0.3 RELEASE</span>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', fontWeight: 700, color: '#444', marginBottom: '20px' }}>
               <div style={{ padding: '12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Target Architecture</div>
-                <div style={{ color: '#000', fontWeight: 800 }}>Android 8.0+ (arm64-v8a, armeabi-v7a, x86_64)</div>
+                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Target Architecture & Package</div>
+                <div style={{ color: '#000', fontWeight: 800 }}>Android 8.0+ (com.inhibit.user)</div>
               </div>
               <div style={{ padding: '12px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '8px' }}>
-                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Security Guarantee</div>
+                <div style={{ fontWeight: 900, fontSize: '11px', textTransform: 'uppercase', color: '#666' }}>Security & Privacy Guarantee</div>
                 <div style={{ color: '#000', fontWeight: 800 }}>100% Local Sandboxed Engine • Zero Network Requests</div>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a 
-                href="https://github.com/pavanstarkin-tech/inhibit/releases/download/v1.0.0/inhibit-v1.0.0.apk" 
+                href="https://github.com/pavanstarkin-tech/inhibit-app/releases/download/v1.0.3/inhibit-v1.0.3.apk" 
                 target="_blank" 
                 rel="noreferrer"
-                download="inhibit-v1.0.0.apk"
+                download="inhibit-v1.0.3.apk"
                 className="neo-btn"
                 style={{ padding: '12px', backgroundColor: 'var(--accent-yellow)', width: '100%', textAlign: 'center', textDecoration: 'none' }}
               >
                 <Download size={18} />
-                <span>Direct APK Download (v1.0.0)</span>
+                <span>Direct APK Download (v1.0.3)</span>
               </a>
 
               <a 
-                href="https://github.com/pavanstarkin-tech/inhibit/releases/tag/v1.0.0" 
+                href="https://github.com/pavanstarkin-tech/inhibit-app/releases/tag/v1.0.3" 
                 target="_blank" 
                 rel="noreferrer"
                 className="neo-btn white"
@@ -1124,7 +1129,7 @@ export default function App() {
         >
           <span className="pulse-dot"></span>
           <Download size={18} />
-          <span>Get APK (v1.0.0)</span>
+          <span>Get APK (v1.0.3)</span>
         </button>
       </div>
     </div>

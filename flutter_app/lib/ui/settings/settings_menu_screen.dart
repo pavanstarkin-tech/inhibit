@@ -106,7 +106,7 @@ class SettingsMenuScreen extends StatelessWidget {
                 icon: Icons.info_outline_rounded,
                 iconBg: const Color(0xFFE2E8F0),
                 title: 'About Inhibit',
-                badgeText: 'v1.0.2',
+                badgeText: 'v1.0.3',
                 onTap: () => _showAboutDialog(context),
               ),
               const SizedBox(height: 12),

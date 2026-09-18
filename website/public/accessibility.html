@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Play Accessibility Declaration & Compliance Guide | Inhibit</title>
+  <style>
+    :root {
+      --bg: #FFF8E7;
+      --card-bg: #FFFFFF;
+      --border: #000000;
+      --accent-yellow: #FFD21E;
+      --accent-blue: #C7D2FE;
+      --accent-green: #4ADE80;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: #111827;
+      margin: 0;
+      padding: 24px 16px;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 3px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 6px 6px 0px var(--border);
+      padding: 32px 28px;
+    }
+    h1 { font-size: 26px; font-weight: 900; margin-top: 0; }
+    h2 { font-size: 19px; font-weight: 800; margin-top: 24px; border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+    .badge {
+      display: inline-block;
+      background: var(--accent-blue);
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 12px;
+    }
+    .check-item {
+      background: #F8FAFC;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      box-shadow: 3px 3px 0px var(--border);
+    }
+    .check-title { font-weight: 800; color: #000; margin-bottom: 4px; }
+    a { color: #000; font-weight: bold; }
+    .nav-links {
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 2px solid var(--border);
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge">PLAY CONSOLE COMPLIANCE</div>
+    <h1>Google Play AccessibilityService Declaration Guide</h1>
+    <p><strong>Package Name:</strong> <code>com.inhibit.user</code></p>
+
+    <h2>Google Play Review Declaration Statements</h2>
+
+    <div class="check-item">
+      <div class="check-title">1. Core Functionality Declaration</div>
+      <div>Inhibit uses the <code>AccessibilityService</code> API exclusively for its core functionality: <strong>Digital Wellbeing &amp; Short-Video Doomscroll Intervention</strong>. The service detects when a user is actively scrolling through endless algorithmic short-video feeds (Instagram Reels / YouTube Shorts) and deterministically intervenes by returning the user to their home feed.</div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-title">2. Is this an Accessibility Tool?</div>
+      <div><strong>No.</strong> <code>android:isAccessibilityTool</code> is NOT declared as true. Inhibit is a rule-based digital wellbeing productivity tool.</div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-title">3. Prominent In-App Disclosure &amp; Consent</div>
+      <div>Before navigating to Android Accessibility Settings, Inhibit displays an explicit, prominent in-app disclosure modal detailing exactly what views are evaluated and requiring affirmative user consent ("Accept and Continue").</div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-title">4. Data Safety &amp; Non-Collection</div>
+      <div>Zero data is collected, logged, or transmitted off the device. No personal information, keystrokes, messages, or credentials are read.</div>
+    </div>
+
+    <div class="check-item">
+      <div class="check-title">5. Review Demonstration Video Elements</div>
+      <div>Review video includes:
+        <ul>
+          <li>App launch and navigation to onboarding/shield screen.</li>
+          <li>Display of the Prominent Disclosure dialog.</li>
+          <li>Affirmative user consent and Android settings navigation.</li>
+          <li>Demonstration of Reel #1 playing uninterrupted and Reel #2 scroll interception smoothly returning to home feed.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/privacy.html">Privacy Policy</a>
+      <a href="/terms.html">Terms of Service</a>
+      <a href="/faq.html">FAQs</a>
+      <a href="/data-safety.html">Data Safety</a>
+      <a href="/data-deletion.html">Data Deletion</a>
+    </div>
+  </div>
+</body>
+</html>
