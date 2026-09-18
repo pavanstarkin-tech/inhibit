@@ -88,15 +88,22 @@ class _NeoButtonState extends State<NeoButton> {
         children: [
           if (widget.icon != null) ...[
             Icon(widget.icon, color: widget.textColor, size: widget.fontSize + 4),
-            const SizedBox(width: 8),
+            const SizedBox(width: 6),
           ],
-          Text(
-            widget.text,
-            style: TextStyle(
-              fontSize: widget.fontSize,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: isDisabled ? const Color(0xFF888888) : widget.textColor,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                widget.text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: widget.fontSize,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.3,
+                  color: isDisabled ? const Color(0xFF888888) : widget.textColor,
+                ),
+              ),
             ),
           ),
         ],

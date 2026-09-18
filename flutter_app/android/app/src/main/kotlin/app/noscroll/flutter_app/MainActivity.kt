@@ -136,7 +136,7 @@ class MainActivity : FlutterActivity() {
                 }
                 "startPostMode" -> {
                     val durationMinutes = call.argument<Int>("durationMinutes") ?: 30
-                    val expiresAt = System.currentTimeMillis() + (durationMinutes * 60 * 1000L)
+                    val expiresAt = if (durationMinutes <= 0) 0L else (System.currentTimeMillis() + (durationMinutes * 60 * 1000L))
                     val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
                     statsPrefs.edit().putLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, expiresAt).apply()
                     result.success(true)

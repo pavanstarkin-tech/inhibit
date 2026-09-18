@@ -475,7 +475,7 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
                     backgroundColor: AppTheme.accentYellow,
                     textColor: Colors.black,
                     isFullWidth: true,
-                    height: 38,
+                    height: 42,
                     fontSize: 11,
                     onPressed: () => widget.appState.openAccessibilitySettings(),
                   ),
