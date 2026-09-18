@@ -8,7 +8,7 @@
 PRODUCT_NAME = Inhibit
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = app.noscroll.flutterApp
+PRODUCT_BUNDLE_IDENTIFIER = com.inhibit.user
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 app.noscroll. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 com.inhibit.user. All rights reserved.

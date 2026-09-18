@@ -1,4 +1,4 @@
-package app.noscroll.flutter_app.shield
+﻿package com.inhibit.user.shield
 
 import android.graphics.Rect
 import android.util.Log

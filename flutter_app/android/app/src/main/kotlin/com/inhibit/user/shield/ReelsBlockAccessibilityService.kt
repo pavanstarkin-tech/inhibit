@@ -1,4 +1,4 @@
-package app.noscroll.flutter_app.shield
+﻿package com.inhibit.user.shield
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
@@ -18,7 +18,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
-import app.noscroll.flutter_app.MainActivity
+import com.inhibit.user.MainActivity
 
 /**
  * Inhibit Native Accessibility Doomscroll & Explore Blocker.

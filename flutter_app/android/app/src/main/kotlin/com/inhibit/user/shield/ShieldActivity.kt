@@ -1,4 +1,4 @@
-package app.noscroll.flutter_app.shield
+﻿package com.inhibit.user.shield
 
 import android.app.Activity
 import android.content.Context
@@ -13,7 +13,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import app.noscroll.flutter_app.MainActivity
+import com.inhibit.user.MainActivity
 
 /**
  * Modern Neobrutalist Native Shield Screen.

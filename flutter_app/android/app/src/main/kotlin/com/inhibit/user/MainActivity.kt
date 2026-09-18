@@ -1,10 +1,10 @@
-package app.noscroll.flutter_app
+﻿package com.inhibit.user
 
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.text.TextUtils
-import app.noscroll.flutter_app.shield.ReelsBlockAccessibilityService
+import com.inhibit.user.shield.ReelsBlockAccessibilityService
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -126,9 +126,9 @@ class MainActivity : FlutterActivity() {
                     result.success(true)
                 }
                 "getShieldStats" -> {
-                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
-                    val scrolled = statsPrefs.getInt(app.noscroll.flutter_app.shield.GuardController.KEY_TOTAL_REELS_SCROLLED, 0)
-                    val blocked = statsPrefs.getInt(app.noscroll.flutter_app.shield.GuardController.KEY_TOTAL_REELS_BLOCKED, 0)
+                    val statsPrefs = getSharedPreferences(com.inhibit.user.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    val scrolled = statsPrefs.getInt(com.inhibit.user.shield.GuardController.KEY_TOTAL_REELS_SCROLLED, 0)
+                    val blocked = statsPrefs.getInt(com.inhibit.user.shield.GuardController.KEY_TOTAL_REELS_BLOCKED, 0)
                     result.success(mapOf(
                         "totalReelsScrolled" to scrolled,
                         "totalReelsBlocked" to blocked
@@ -137,18 +137,18 @@ class MainActivity : FlutterActivity() {
                 "startPostMode" -> {
                     val durationMinutes = call.argument<Int>("durationMinutes") ?: 30
                     val expiresAt = if (durationMinutes <= 0) 0L else (System.currentTimeMillis() + (durationMinutes * 60 * 1000L))
-                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
-                    statsPrefs.edit().putLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, expiresAt).apply()
+                    val statsPrefs = getSharedPreferences(com.inhibit.user.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    statsPrefs.edit().putLong(com.inhibit.user.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, expiresAt).apply()
                     result.success(true)
                 }
                 "isPostModeActive" -> {
-                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
-                    val expiresAt = statsPrefs.getLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
+                    val statsPrefs = getSharedPreferences(com.inhibit.user.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    val expiresAt = statsPrefs.getLong(com.inhibit.user.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
                     result.success(System.currentTimeMillis() < expiresAt)
                 }
                 "getPostModeRemainingSeconds" -> {
-                    val statsPrefs = getSharedPreferences(app.noscroll.flutter_app.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
-                    val expiresAt = statsPrefs.getLong(app.noscroll.flutter_app.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
+                    val statsPrefs = getSharedPreferences(com.inhibit.user.shield.GuardController.PREFS_STATS, Context.MODE_PRIVATE)
+                    val expiresAt = statsPrefs.getLong(com.inhibit.user.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
                     val remaining = (expiresAt - System.currentTimeMillis()) / 1000
                     result.success(if (remaining > 0) remaining.toInt() else 0)
                 }

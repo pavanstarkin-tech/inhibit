@@ -1,4 +1,4 @@
-package app.noscroll.flutter_app.shield
+﻿package com.inhibit.user.shield
 
 /**
  * High-level screen classification for monitored applications.
