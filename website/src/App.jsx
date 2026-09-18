@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Shield, 
   Smartphone, 
@@ -20,6 +20,11 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+const GITHUB_REPO = 'pavanstarkin-tech/inhibit-app';
+const FALLBACK_VERSION = 'v1.0.3';
+const FALLBACK_APK_URL = `https://github.com/${GITHUB_REPO}/releases/download/${FALLBACK_VERSION}/inhibit-${FALLBACK_VERSION}.apk`;
+const FALLBACK_RELEASE_URL = `https://github.com/${GITHUB_REPO}/releases/tag/${FALLBACK_VERSION}`;
+
 const FacebookIcon = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -29,6 +34,51 @@ const FacebookIcon = ({ size = 20, className = '' }) => (
 export default function App() {
   // Mobile Navigation State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Dynamic GitHub Release State (Always fetches latest live release & APK dynamically)
+  const [releaseInfo, setReleaseInfo] = useState({
+    version: FALLBACK_VERSION,
+    apkUrl: FALLBACK_APK_URL,
+    releaseUrl: FALLBACK_RELEASE_URL,
+    apkName: `inhibit-${FALLBACK_VERSION}.apk`,
+    publishedAt: null,
+    loading: true
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLatestRelease = async () => {
+      try {
+        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isMounted || !data.tag_name) return;
+
+        const tag = data.tag_name;
+        const apkAsset = Array.isArray(data.assets) 
+          ? data.assets.find(a => a.name && a.name.toLowerCase().endsWith('.apk')) 
+          : null;
+
+        const apkUrl = apkAsset?.browser_download_url || `https://github.com/${GITHUB_REPO}/releases/download/${tag}/inhibit-${tag}.apk`;
+        const apkName = apkAsset?.name || `inhibit-${tag}.apk`;
+        const releaseUrl = data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/${tag}`;
+
+        setReleaseInfo({
+          version: tag,
+          apkUrl: apkUrl,
+          releaseUrl: releaseUrl,
+          apkName: apkName,
+          publishedAt: data.published_at,
+          loading: false
+        });
+      } catch (err) {
+        console.warn('GitHub dynamic release fetch fallback active:', err);
+      }
+    };
+
+    fetchLatestRelease();
+    return () => { isMounted = false; };
+  }, []);
 
   // Simulator State
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'shield' | 'profile'
@@ -107,14 +157,14 @@ export default function App() {
         <div className="top-marquee-track">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="marquee-item">
-              <span className="neo-badge green strip-badge">v1.0.0 RELEASE</span>
+              <span className="neo-badge green strip-badge">{releaseInfo.version} RELEASE</span>
               <span>⚡ Zero Telemetry Android Shield — Instagram Reels & YouTube Shorts auto-redirection active!</span>
               <span style={{ opacity: 0.5 }}>•</span>
               <button 
                 onClick={(e) => { e.stopPropagation(); setShowDownloadModal(true); }} 
                 className="strip-link"
               >
-                Download APK →
+                Download APK ({releaseInfo.version}) →
               </button>
               <span style={{ opacity: 0.4 }}>✦</span>
             </div>
@@ -150,7 +200,7 @@ export default function App() {
               style={{ padding: '8px 14px', fontSize: '13px' }}
             >
               <Download size={15} />
-              <span>Get APK</span>
+              <span>Get APK ({releaseInfo.version})</span>
             </button>
 
             {/* Mobile Hamburger Toggle */}
@@ -241,7 +291,7 @@ export default function App() {
                 style={{ fontSize: '15px', padding: '12px 20px', backgroundColor: 'var(--accent-yellow)' }}
               >
                 <Download size={18} />
-                <span>Download Inhibit v1.0.0</span>
+                <span>Download Inhibit {releaseInfo.version}</span>
               </button>
 
               <button 
@@ -994,17 +1044,17 @@ export default function App() {
                 style={{ fontSize: '16px', padding: '14px 28px', backgroundColor: 'var(--accent-yellow)' }}
               >
                 <Download size={20} />
-                <span>Download Inhibit APK (v1.0.0)</span>
+                <span>Download Inhibit APK ({releaseInfo.version})</span>
               </button>
               <a 
-                href="https://github.com/pavanstarkin-tech/inhibit" 
+                href={releaseInfo.releaseUrl} 
                 target="_blank" 
                 rel="noreferrer"
                 className="neo-btn white"
                 style={{ fontSize: '16px', padding: '14px 28px' }}
               >
                 <ExternalLink size={20} />
-                <span>GitHub Repository</span>
+                <span>GitHub Releases</span>
               </a>
             </div>
 
@@ -1012,7 +1062,7 @@ export default function App() {
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 1</div>
                 <div style={{ fontWeight: 900, fontSize: '14px' }}>Download APK</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Download the verified `inhibit-v1.0.0.apk` release package.</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Download the verified <code>{releaseInfo.apkName}</code> release package.</p>
               </div>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 2</div>
@@ -1077,7 +1127,7 @@ export default function App() {
               </div>
               <div>
                 <h3 style={{ fontSize: '20px', fontWeight: 900 }}>Download Inhibit</h3>
-                <span className="neo-badge green" style={{ fontSize: '10px' }}>v1.0.3 RELEASE</span>
+                <span className="neo-badge green" style={{ fontSize: '10px' }}>{releaseInfo.version} RELEASE</span>
               </div>
             </div>
 
@@ -1094,19 +1144,19 @@ export default function App() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <a 
-                href="https://github.com/pavanstarkin-tech/inhibit-app/releases/download/v1.0.3/inhibit-v1.0.3.apk" 
+                href={releaseInfo.apkUrl} 
                 target="_blank" 
                 rel="noreferrer"
-                download="inhibit-v1.0.3.apk"
+                download={releaseInfo.apkName}
                 className="neo-btn"
                 style={{ padding: '12px', backgroundColor: 'var(--accent-yellow)', width: '100%', textAlign: 'center', textDecoration: 'none' }}
               >
                 <Download size={18} />
-                <span>Direct APK Download (v1.0.3)</span>
+                <span>Direct APK Download ({releaseInfo.version})</span>
               </a>
 
               <a 
-                href="https://github.com/pavanstarkin-tech/inhibit-app/releases/tag/v1.0.3" 
+                href={releaseInfo.releaseUrl} 
                 target="_blank" 
                 rel="noreferrer"
                 className="neo-btn white"
@@ -1129,7 +1179,7 @@ export default function App() {
         >
           <span className="pulse-dot"></span>
           <Download size={18} />
-          <span>Get APK (v1.0.3)</span>
+          <span>Get APK ({releaseInfo.version})</span>
         </button>
       </div>
     </div>
