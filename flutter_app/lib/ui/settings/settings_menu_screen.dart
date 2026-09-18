@@ -3,6 +3,7 @@ import '../../core/services/app_state.dart';
 import '../../core/services/native_shield_service.dart';
 import '../../core/services/update_service.dart';
 import '../components/neo_card.dart';
+import '../onboarding/onboarding_flow.dart';
 import '../theme/app_theme.dart';
 
 class SettingsMenuScreen extends StatelessWidget {
@@ -82,10 +83,30 @@ class SettingsMenuScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               _buildMenuItem(
+                icon: Icons.tour_outlined,
+                iconBg: const Color(0xFFC7D2FE),
+                title: 'Replay Welcome Tour',
+                badgeText: '5 steps',
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => Scaffold(
+                        body: OnboardingFlow(
+                          appState: appState,
+                          onComplete: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+
+              _buildMenuItem(
                 icon: Icons.info_outline_rounded,
                 iconBg: const Color(0xFFE2E8F0),
                 title: 'About Inhibit',
-                badgeText: 'v1.0.0',
+                badgeText: 'v1.0.2',
                 onTap: () => _showAboutDialog(context),
               ),
               const SizedBox(height: 12),

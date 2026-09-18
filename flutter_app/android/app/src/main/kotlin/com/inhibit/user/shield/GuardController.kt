@@ -1,4 +1,4 @@
-﻿package com.inhibit.user.shield
+package com.inhibit.user.shield
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -93,18 +93,20 @@ class GuardController(private val context: Context) {
             newScreen == Screen.OUTSIDE
         )
 
-        // 1. Session Management on Clearly Safe Screens (Require 1500ms true dwell before resetting session)
+        // 1. Session Management on Clearly Safe Screens
+        // Direct messages (Chat) and Outside apps reset session immediately so sent reels can always be watched.
         if (isClearlySafeScreen) {
+            val isImmediateResetScreen = (newScreen == Screen.INSTAGRAM_CHAT || newScreen == Screen.OUTSIDE)
             if (lastLeaveVideoTime == 0L) {
                 lastLeaveVideoTime = now
             }
-            if (now - lastLeaveVideoTime > SESSION_RESET_TIMEOUT_MS) {
+            if (isImmediateResetScreen || (now - lastLeaveVideoTime > SESSION_RESET_TIMEOUT_MS)) {
                 if (currentScreen != newScreen || videosWatchedInSession > 0 || activeVideoSig != null) {
                     currentScreen = newScreen
                     activeVideoSig = null
                     videosWatchedInSession = 0
                     sessionStartTime = 0L
-                    Log.d("INHIBIT_GUARD", "Reset video session on safe screen: $newScreen (dwelled ${now - lastLeaveVideoTime}ms)")
+                    Log.d("INHIBIT_GUARD", "Reset video session on safe screen: $newScreen (immediate=$isImmediateResetScreen)")
                 }
             }
             return

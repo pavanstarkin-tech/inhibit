@@ -98,10 +98,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     const SizedBox(height: 12),
                   ],
 
-                  // SCROLL LESS. LIVE MORE. Banner
-                  _buildHeroBanner(),
-                  const SizedBox(height: 14),
-
                   // DISTRACTIONS BLOCKED Stat Card (REAL LIVE STATS)
                   _buildDistractionsBlockedCard(),
                   const SizedBox(height: 20),
@@ -115,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(height: 10),
                   _buildYourServicesGrid(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -222,43 +218,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildHeroBanner() {
-    return const NeoCard(
-      backgroundColor: Color(0xFFFFD1DC),
-      padding: EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      shadowOffset: Offset(4, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'SCROLL LESS.',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              Text(
-                'LIVE MORE.',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.black,
-                  letterSpacing: -0.5,
-                ),
-              ),
-            ],
-          ),
-          Text('😊', style: TextStyle(fontSize: 36)),
-        ],
-      ),
     );
   }
 

@@ -206,53 +206,34 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
 
         const SizedBox(height: 12),
 
-        // Center Hero Brand Card
+        // Center Hero Welcome Art Card
         Expanded(
           child: Center(
             child: Container(
               width: double.infinity,
-              margin: const EdgeInsets.symmetric(horizontal: 12),
-              padding: const EdgeInsets.all(24),
+              margin: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: AppTheme.accentYellow,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: AppTheme.borderBlack, width: 3),
                 boxShadow: AppTheme.hardShadow(offset: const Offset(4, 4)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 90,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'SOCIAL MEDIA\nON YOUR TERMS',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                      letterSpacing: -0.5,
-                      height: 1.15,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: Image.asset(
+                  'assets/images/welcome.png',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    color: AppTheme.accentYellow,
+                    padding: const EdgeInsets.all(20),
+                    child: const Center(
+                      child: Text(
+                        'SOCIAL MEDIA ON YOUR TERMS',
+                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.borderBlack, width: 2),
-                    ),
-                    child: const Text(
-                      '⚡ NO DOOMSCROLLING',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

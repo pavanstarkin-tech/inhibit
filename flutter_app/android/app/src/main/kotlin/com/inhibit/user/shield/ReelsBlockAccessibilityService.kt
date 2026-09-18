@@ -1,4 +1,4 @@
-﻿package com.inhibit.user.shield
+package com.inhibit.user.shield
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
@@ -259,21 +259,13 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
             lastContentEventTime = nowUptime
         }
 
+        // Never process our own app's events or if our app is in the foreground
+        if (eventPkg == packageName) return
+
         val isEventTarget = (eventPkg == ScreenDetector.PKG_INSTAGRAM || eventPkg == ScreenDetector.PKG_YOUTUBE)
-        var targetPkg = if (isEventTarget) eventPkg else ""
+        if (!isEventTarget) return
 
-        if (targetPkg.isEmpty()) {
-            val rawRootPkg = try { rootInActiveWindow?.packageName?.toString().orEmpty() } catch (_: Exception) { "" }
-            if (rawRootPkg == ScreenDetector.PKG_INSTAGRAM || rawRootPkg == ScreenDetector.PKG_YOUTUBE) {
-                targetPkg = rawRootPkg
-            }
-        }
-
-        // Ignore events if neither event nor root is Instagram / YouTube
-        if (targetPkg.isEmpty()) return
-
-        // Never process our own app's window
-        if (eventPkg == packageName && targetPkg == packageName) return
+        val targetPkg = eventPkg
 
         // Resolve target application root
         val resolved = resolveTargetAppRoot(targetPkg, event)
@@ -423,6 +415,13 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
         showPushAlertNotification("🚫 Inhibit: Blocked", "$message (Total Blocked: $totalBlocked)")
 
         fun performInAppHomeNavigation(): Boolean {
+            // Verify active window is strictly the target package before sending back
+            val activePkg = try { rootInActiveWindow?.packageName?.toString().orEmpty() } catch (_: Exception) { "" }
+            if (activePkg.isNotEmpty() && activePkg != pkg) {
+                Log.d("INHIBIT_SERVICE", "EXIT ACTION ABORTED: active window ($activePkg) does not match target ($pkg)")
+                return false
+            }
+
             // Priority 1: Safe Global Back (instant, native, zero-glitch exit for full-screen Reels & Shorts)
             try {
                 val backSuccess = performGlobalAction(GLOBAL_ACTION_BACK)
