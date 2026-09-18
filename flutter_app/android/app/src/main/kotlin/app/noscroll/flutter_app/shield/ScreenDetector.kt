@@ -46,14 +46,8 @@ data class VideoSignature(
                 return true
             }
         }
-        if (captionSnippet.isNotEmpty() && other.captionSnippet.isNotEmpty() && captionSnippet.length >= 6 && other.captionSnippet.length >= 6) {
+        if (captionSnippet.isNotEmpty() && other.captionSnippet.isNotEmpty() && captionSnippet.length >= 10 && other.captionSnippet.length >= 10) {
             if (!captionSnippet.equals(other.captionSnippet, ignoreCase = true)) {
-                return true
-            }
-        }
-        if (tokens.size >= 2 && other.tokens.size >= 2) {
-            val intersection = tokens.intersect(other.tokens)
-            if (intersection.isEmpty()) {
                 return true
             }
         }

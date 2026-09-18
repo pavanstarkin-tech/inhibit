@@ -408,37 +408,34 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
         showPushAlertNotification("🚫 Inhibit: Blocked", "$message (Total Blocked: $totalBlocked)")
 
         fun performInAppHomeNavigation(): Boolean {
+            // Priority 1: Safe Global Back (instant, native, zero-glitch exit for full-screen Reels & Shorts)
             try {
-                val currentRoot = rootInActiveWindow
-                val homeNode = detector.findHomeTabNode(currentRoot)
-                if (homeNode != null && detector.performDeepClick(homeNode)) {
-                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: IN_APP_HOME_CLICK success for $pkg")
+                val backSuccess = performGlobalAction(GLOBAL_ACTION_BACK)
+                if (backSuccess) {
+                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: GLOBAL_ACTION_BACK success for $pkg")
                     return true
                 }
+            } catch (e: Exception) {
+                Log.e("INHIBIT_SERVICE", "Error performing global back for $pkg", e)
+            }
 
+            // Priority 2: In-app Close/Back Button
+            try {
+                val currentRoot = rootInActiveWindow
                 val closeNode = detector.findInAppCloseOrBackNode(currentRoot)
                 if (closeNode != null && detector.performDeepClick(closeNode)) {
                     Log.d("INHIBIT_SERVICE", "EXIT ACTION: IN_APP_CLOSE_CLICK success for $pkg")
                     return true
                 }
-            } catch (e: Exception) {
-                Log.e("INHIBIT_SERVICE", "Error during in-app node search", e)
-            }
 
-            // Fallback: Launch target app's main launcher intent to bring it cleanly to its Home Feed
-            try {
-                val launchIntent = packageManager.getLaunchIntentForPackage(pkg)?.apply {
-                    action = Intent.ACTION_MAIN
-                    addCategory(Intent.CATEGORY_LAUNCHER)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                }
-                if (launchIntent != null) {
-                    startActivity(launchIntent)
-                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: LAUNCH_INTENT_HOME success for $pkg")
+                // Priority 3: In-app Home Tab Click (Bottom Navigation Bar / Pivot Bar)
+                val homeNode = detector.findHomeTabNode(currentRoot)
+                if (homeNode != null && detector.performDeepClick(homeNode)) {
+                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: IN_APP_HOME_CLICK success for $pkg")
                     return true
                 }
             } catch (e: Exception) {
-                Log.e("INHIBIT_SERVICE", "Error launching home intent for $pkg", e)
+                Log.e("INHIBIT_SERVICE", "Error during in-app node search", e)
             }
 
             return false

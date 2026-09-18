@@ -93,7 +93,7 @@ class GuardController(private val context: Context) {
             newScreen == Screen.OUTSIDE
         )
 
-        // 1. Session Management on Clearly Safe Screens (Require 2000ms true dwell before resetting session)
+        // 1. Session Management on Clearly Safe Screens (Require 1500ms true dwell before resetting session)
         if (isClearlySafeScreen) {
             if (lastLeaveVideoTime == 0L) {
                 lastLeaveVideoTime = now
@@ -115,12 +115,12 @@ class GuardController(private val context: Context) {
             lastLeaveVideoTime = 0L
         }
 
-        // If not a confirmed video (and not an active session scroll on possible video), return
-        if (!isConfirmedVideo && !(isPossibleVideo && videosWatchedInSession >= allowedVideos && isScrollEvent)) {
+        // If not a confirmed video, return
+        if (!isConfirmedVideo && !isPossibleVideo) {
             return
         }
 
-        // 2. First Reel / Short in Session -> ALLOW
+        // 2. First Reel / Short in Session -> ALLOW TO WATCH FULLY WITHOUT INTERRUPTION
         if (videosWatchedInSession == 0) {
             currentScreen = newScreen
             sessionStartTime = now
@@ -128,27 +128,42 @@ class GuardController(private val context: Context) {
             activeVideoSig = currentSig
             totalReelsScrolled++
             onReelCountChanged?.invoke(totalReelsScrolled)
-            Log.d("INHIBIT_GUARD", "Allowed Short/Reel #1 (Sig: $activeVideoSig, Total Scrolled Today: $totalReelsScrolled)")
+            Log.d("INHIBIT_GUARD", "Allowed Short/Reel #1 to watch fully (Sig: $activeVideoSig, Total Scrolled Today: $totalReelsScrolled)")
             return
         }
 
-        // 3. While Video #1 is playing: Continuously enrich activeVideoSig with newly rendered metadata
+        // 3. While Video #1 is playing:
+        // Always enrich activeVideoSig with newly rendered metadata so we know the true 1st video
         if (videosWatchedInSession == 1) {
-            if (activeVideoSig != null && currentSig.isNotEmpty()) {
-                activeVideoSig = activeVideoSig!!.merge(currentSig)
+            if (activeVideoSig == null || activeVideoSig?.author.isNullOrEmpty()) {
+                if (currentSig.isNotEmpty()) {
+                    activeVideoSig = if (activeVideoSig != null) activeVideoSig!!.merge(currentSig) else currentSig
+                }
             }
         }
 
-        // 4. Second Reel / Short Interception (User Swipe gesture or Distinct New Video Signature)
+        // 4. Second Reel / Short Interception:
+        // User actively swiped to next reel OR scrolled to a new distinct author after initial settling
         val isTargetReel = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.INSTAGRAM_REEL_POSSIBLE) && blockInstagramReels
         val isTargetShort = (newScreen == Screen.YOUTUBE_SHORT || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE) && blockYouTubeShorts
 
         if (isTargetReel || isTargetShort) {
             if (videosWatchedInSession >= allowedVideos) {
-                val isDistinctNewVideo = activeVideoSig != null && currentSig.isDistinctFrom(activeVideoSig)
-                val isSwipeEvent = isScrollEvent && (now - sessionStartTime > SETTLING_GRACE_MS)
+                val timeSinceStart = now - sessionStartTime
+                val isPastSettling = timeSinceStart > INITIAL_SETTLING_GRACE_MS
 
-                val shouldIntercept = isDistinctNewVideo || isSwipeEvent
+                // During initial 1.2s settling, ignore scroll events from layout/view inflation
+                if (!isPastSettling) {
+                    return
+                }
+
+                // Distinct new video confirmed (different author/audio/caption)
+                val isDistinctNewVideo = activeVideoSig != null && currentSig.isDistinctFrom(activeVideoSig)
+                
+                // Active user swipe gesture while on Reels pager
+                val isSwipeEvent = isScrollEvent && isPastSettling
+
+                val shouldIntercept = isSwipeEvent || isDistinctNewVideo
 
                 if (shouldIntercept) {
                     Log.d("INHIBIT_GUARD", "TRANSITION EVAL: screen=$newScreen previousSig='$activeVideoSig' currentSig='$currentSig' isDistinctNewVideo=$isDistinctNewVideo isSwipeEvent=$isSwipeEvent action=BLOCK")
@@ -158,8 +173,8 @@ class GuardController(private val context: Context) {
                         totalReelsScrolled++
                         totalReelsBlocked++
 
-                        val mediaType = if (isTargetReel) "Reel" else "Short"
-                        val message = "$mediaType limit reached"
+                        val mediaType = if (isTargetReel) "Instagram Reel" else "YouTube Short"
+                        val message = "$mediaType scroll stopped"
 
                         Log.d("INHIBIT_GUARD", "DOOMSCROLL INTERCEPTED: $message | Total Blocked: $totalReelsBlocked")
                         onExit(message, totalReelsBlocked)
@@ -179,9 +194,9 @@ class GuardController(private val context: Context) {
     }
 
     companion object {
-        private const val DEBOUNCE_MS = 400L
-        private const val SETTLING_GRACE_MS = 250L
-        private const val SESSION_RESET_TIMEOUT_MS = 2000L
+        private const val DEBOUNCE_MS = 300L
+        private const val INITIAL_SETTLING_GRACE_MS = 1200L
+        private const val SESSION_RESET_TIMEOUT_MS = 1500L
 
         const val PREFS_STATS = "inhibit_stats_prefs"
         const val KEY_TOTAL_REELS_SCROLLED = "total_reels_scrolled"
