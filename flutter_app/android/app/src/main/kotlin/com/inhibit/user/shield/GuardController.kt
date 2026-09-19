@@ -191,15 +191,17 @@ class GuardController(private val context: Context) {
         }
 
         // 3. While Video #1 is playing:
-        // ONLY intercept when the user explicitly performs a vertical swipe/scroll to advance to Reel #2!
+        // ZERO interruptions while watching Video #1.
+        // Whenever the user scrolls vertically or advances to Reel #2, trigger back function immediately!
         if (videosWatchedInSession == 1) {
             val timeSinceStart = now - sessionStartTime
             val isPastSettling = timeSinceStart > INITIAL_SETTLING_GRACE_MS
+            val isDistinctVideo = activeVideoSig != null && currentSig.isNotEmpty() && currentSig.isDistinctFrom(activeVideoSig)
 
             val isTargetReel = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.INSTAGRAM_REEL_POSSIBLE) && blockInstagramReels
             val isTargetShort = (newScreen == Screen.YOUTUBE_SHORT || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE) && blockYouTubeShorts
 
-            if ((isTargetReel || isTargetShort) && isScrollEvent && isPastSettling) {
+            if ((isTargetReel || isTargetShort) && ((isScrollEvent && isPastSettling) || isDistinctVideo)) {
                 if (now - lastActionTime > DEBOUNCE_MS) {
                     lastActionTime = now
                     notifyExitStarted()
@@ -210,7 +212,7 @@ class GuardController(private val context: Context) {
                     val mediaType = if (isTargetReel) "Instagram Reel" else "YouTube Short"
                     val message = "$mediaType scroll stopped"
 
-                    Log.d("INHIBIT_GUARD", "DOOMSCROLL INTERCEPTED: $message on scroll past Reel #1 | Total Blocked: $totalReelsBlocked")
+                    Log.d("INHIBIT_GUARD", "DOOMSCROLL INTERCEPTED: $message on scroll to Reel #2 | Total Blocked: $totalReelsBlocked")
                     onExit(message, totalReelsBlocked)
                 }
             }
@@ -218,7 +220,7 @@ class GuardController(private val context: Context) {
         }
 
         // 4. Subsequent Reels / Shorts in the same session:
-        // Only trigger on explicit scroll event or if past debounce
+        // Trigger on explicit scroll event or if past debounce
         val isTargetReel = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.INSTAGRAM_REEL_POSSIBLE) && blockInstagramReels
         val isTargetShort = (newScreen == Screen.YOUTUBE_SHORT || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE) && blockYouTubeShorts
 
@@ -252,7 +254,7 @@ class GuardController(private val context: Context) {
 
     companion object {
         private const val DEBOUNCE_MS = 600L
-        private const val INITIAL_SETTLING_GRACE_MS = 1500L
+        private const val INITIAL_SETTLING_GRACE_MS = 500L
         private const val APP_LAUNCH_GRACE_MS = 2000L
         private const val SESSION_RESET_TIMEOUT_MS = 1200L
         private const val EXIT_COOLDOWN_MS = 1500L
