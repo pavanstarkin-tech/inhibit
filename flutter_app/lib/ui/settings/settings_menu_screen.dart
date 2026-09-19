@@ -330,7 +330,7 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
         title: const Text('Privacy & Terms', style: TextStyle(fontWeight: FontWeight.w900)),
         content: const Text(
           '1. Inhibit does not collect or transmit your personal data.\n2. All detection and shield rules execute entirely locally on your device.\n3. Accessibility service permissions are strictly used to intercept short-form doomscrolling loops (Reels & Shorts).\n4. You remain in full control of all shield rules at all times.',
-          style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
         ),
         actions: [
           TextButton(

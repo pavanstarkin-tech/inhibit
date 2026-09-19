@@ -161,7 +161,7 @@ class UiTreeSnapshot(root: AccessibilityNodeInfo?) {
         if (!desc.isNullOrEmpty()) {
             val descLower = desc.lowercase()
             descriptions.add(descLower)
-            if (homeTabNode == null && (descLower == "home" || descLower == "feed")) {
+            if (homeTabNode == null && (descLower == "home" || descLower == "feed" || viewId?.lowercase()?.contains("feed_tab") == true || viewId?.lowercase()?.contains("tab_icon_home") == true)) {
                 homeTabNode = node
             }
             if (desc.length > 3 && !staticNavTokens.contains(descLower) && visibleTokens.size < 10) {
@@ -1103,7 +1103,13 @@ class ScreenDetector {
                      findNodeWithDescExact(root, "feed")
         if (byDesc != null) return byDesc
 
-        // Priority 2: Bottom tab bar row -> 1st child (Tab 0) is always Home tab
+        // Priority 2: Direct view ID match
+        val byId = findNodeWithViewId(root, "feed_tab") ?:
+                   findNodeWithViewId(root, "tab_icon_home") ?:
+                   findNodeWithViewId(root, "home_tab")
+        if (byId != null) return byId
+
+        // Priority 3: Bottom tab bar container -> 1st child (Tab 0) is always Home tab
         val tabBar = findNodeWithViewId(root, "tab_bar") ?:
                      findNodeWithViewId(root, "navigation_bar") ?:
                      findNodeWithViewId(root, "bottom_navigation") ?:
@@ -1114,7 +1120,7 @@ class ScreenDetector {
             if (firstChild != null) return firstChild
         }
 
-        return findNodeWithViewId(root, "feed_tab") ?: findNodeWithViewId(root, "tab_icon_home")
+        return null
     }
 
     fun findInAppCloseOrBackNode(root: AccessibilityNodeInfo?): AccessibilityNodeInfo? {

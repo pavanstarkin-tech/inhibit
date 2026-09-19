@@ -8,10 +8,11 @@ import android.util.Log
  * State machine and policy controller for doomscroll interception.
  *
  * Core Policies:
- * 1. Allow 1st Reel / Short per session.
- * 2. Block 2nd and subsequent Reels / Shorts immediately and redirect to Home tab.
- * 3. Separate transient transition grace (500ms) from true session reset timeout (2000ms).
- * 4. Normal posts, Explore search/grid, Stories, and Chats are 100% unrestricted.
+ * 1. Allow 1st Reel / Short per session to be watched fully without interruption.
+ * 2. Launch Grace: Never block or execute back actions during the first 2000ms after opening target app.
+ * 3. Smooth In-App Navigation: When 2nd video is scrolled, redirect to Home tab without closing the app.
+ * 4. Outside Package Detection: Reset session immediately when user switches to launcher or other apps.
+ * 5. Cooldown: Enforce 1500ms exit cooldown to prevent event cascade re-triggers.
  */
 class GuardController(private val context: Context) {
 
@@ -23,12 +24,15 @@ class GuardController(private val context: Context) {
 
     private var prefs: SharedPreferences = context.getSharedPreferences(PREFS_STATS, Context.MODE_PRIVATE)
 
+    private var currentActivePackage: String = ""
     private var currentScreen: Screen = Screen.UNKNOWN
     private var activeVideoSig: VideoSignature? = null
     private var videosWatchedInSession: Int = 0
     private var sessionStartTime: Long = 0L
     private var lastActionTime: Long = 0L
     private var lastLeaveVideoTime: Long = 0L
+    private var appForegroundedTime: Long = 0L
+    private var exitCooldownUntil: Long = 0L
 
     var onReelCountChanged: ((Int) -> Unit)? = null
 
@@ -58,18 +62,60 @@ class GuardController(private val context: Context) {
         get() = prefs.getInt(KEY_TOTAL_REELS_BLOCKED, 0)
         private set(value) = prefs.edit().putInt(KEY_TOTAL_REELS_BLOCKED, value).apply()
 
+    /**
+     * Called when an outside package (Launcher, Settings, or another app) is active.
+     * Instantly resets session state so opening Instagram/YouTube starts completely fresh.
+     */
+    fun onOutsidePackageDetected(pkg: String) {
+        if (currentActivePackage != pkg) {
+            currentActivePackage = pkg
+            currentScreen = Screen.OUTSIDE
+            activeVideoSig = null
+            videosWatchedInSession = 0
+            sessionStartTime = 0L
+            lastLeaveVideoTime = System.currentTimeMillis()
+            isExitInProgress = false
+            Log.d("INHIBIT_GUARD", "Outside package detected: $pkg -> Session reset")
+        }
+    }
+
+    /**
+     * Called when a target package (Instagram or YouTube) comes to the foreground.
+     */
+    fun onAppForegrounded(pkg: String) {
+        if (currentActivePackage != pkg) {
+            currentActivePackage = pkg
+            appForegroundedTime = System.currentTimeMillis()
+            videosWatchedInSession = 0
+            activeVideoSig = null
+            sessionStartTime = 0L
+            isExitInProgress = false
+            Log.d("INHIBIT_GUARD", "Target app foregrounded: $pkg (Launch settling grace active)")
+        }
+    }
+
+    fun notifyExitStarted() {
+        isExitInProgress = true
+        exitCooldownUntil = System.currentTimeMillis() + EXIT_COOLDOWN_MS
+    }
+
+    fun notifyExitCompleted() {
+        isExitInProgress = false
+        exitCooldownUntil = maxOf(exitCooldownUntil, System.currentTimeMillis() + 800L)
+    }
+
     fun onScreenDetected(
         newScreen: Screen,
         currentSig: VideoSignature,
         isScrollEvent: Boolean,
         onExit: (String, Int) -> Unit
     ) {
-        if (isExitInProgress) {
-            // While exit is in progress, ignore duplicate triggers to preserve idempotency
+        val now = System.currentTimeMillis()
+
+        if (isExitInProgress || now < exitCooldownUntil) {
+            // While exit or transition cooldown is active, ignore all triggers to avoid duplicate actions
             return
         }
-
-        val now = System.currentTimeMillis()
 
         // --- Intentional Post Mode Check (30-Minute Creator Session) ---
         if (isPostModeActive) {
@@ -77,6 +123,7 @@ class GuardController(private val context: Context) {
             Log.d("INHIBIT_GUARD", "Intentional Post Mode ACTIVE (${remainingSec}s left) -> Passing all events without restriction")
             return
         }
+
         val isConfirmedVideo = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.YOUTUBE_SHORT)
         val isPossibleVideo = (newScreen == Screen.INSTAGRAM_REEL_POSSIBLE || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE)
         val isAnyVideo = isConfirmedVideo || isPossibleVideo
@@ -94,7 +141,6 @@ class GuardController(private val context: Context) {
         )
 
         // 1. Session Management on Clearly Safe Screens
-        // Direct messages (Chat) and Outside apps reset session immediately so sent reels can always be watched.
         if (isClearlySafeScreen) {
             val isImmediateResetScreen = (newScreen == Screen.INSTAGRAM_CHAT || newScreen == Screen.OUTSIDE)
             if (lastLeaveVideoTime == 0L) {
@@ -117,10 +163,15 @@ class GuardController(private val context: Context) {
             lastLeaveVideoTime = 0L
         }
 
-        // If not a confirmed video, return
+        // If not a video screen, return
         if (!isConfirmedVideo && !isPossibleVideo) {
             return
         }
+
+        // --- Launch Settling Grace Period ---
+        // If app was foregrounded less than 2000ms ago, allow it to settle into Video #1 with ZERO back actions.
+        val timeSinceForeground = now - appForegroundedTime
+        val isAppLaunchSettling = appForegroundedTime > 0L && timeSinceForeground < APP_LAUNCH_GRACE_MS
 
         // 2. First Reel / Short in Session -> ALLOW TO WATCH FULLY WITHOUT INTERRUPTION
         if (videosWatchedInSession == 0) {
@@ -130,16 +181,20 @@ class GuardController(private val context: Context) {
             activeVideoSig = currentSig
             totalReelsScrolled++
             onReelCountChanged?.invoke(totalReelsScrolled)
-            Log.d("INHIBIT_GUARD", "Allowed Short/Reel #1 to watch fully with ZERO interruption (Sig: $activeVideoSig, Total Scrolled Today: $totalReelsScrolled)")
+            Log.d("INHIBIT_GUARD", "Allowed Short/Reel #1 to watch fully with ZERO interruption (Sig: $activeVideoSig, Total Scrolled: $totalReelsScrolled)")
+            return
+        }
+
+        // If in launch settling grace, do not block yet
+        if (isAppLaunchSettling) {
             return
         }
 
         // 3. While Video #1 is playing:
-        // ZERO interruptions from metadata/content changes. User can watch unlimited time, replay, and read comments.
         // ONLY intercept when the user explicitly performs a vertical swipe/scroll to advance to Reel #2!
         if (videosWatchedInSession == 1) {
             val timeSinceStart = now - sessionStartTime
-            val isPastSettling = timeSinceStart > INITIAL_SETTLING_GRACE_MS // 2000ms
+            val isPastSettling = timeSinceStart > INITIAL_SETTLING_GRACE_MS
 
             val isTargetReel = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.INSTAGRAM_REEL_POSSIBLE) && blockInstagramReels
             val isTargetShort = (newScreen == Screen.YOUTUBE_SHORT || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE) && blockYouTubeShorts
@@ -147,6 +202,7 @@ class GuardController(private val context: Context) {
             if ((isTargetReel || isTargetShort) && isScrollEvent && isPastSettling) {
                 if (now - lastActionTime > DEBOUNCE_MS) {
                     lastActionTime = now
+                    notifyExitStarted()
                     videosWatchedInSession = 2
                     totalReelsScrolled++
                     totalReelsBlocked++
@@ -161,13 +217,15 @@ class GuardController(private val context: Context) {
             return
         }
 
-        // 4. Subsequent Reels / Shorts in the same session -> Intercept immediately
+        // 4. Subsequent Reels / Shorts in the same session:
+        // Only trigger on explicit scroll event or if past debounce
         val isTargetReel = (newScreen == Screen.INSTAGRAM_REEL || newScreen == Screen.INSTAGRAM_REEL_POSSIBLE) && blockInstagramReels
         val isTargetShort = (newScreen == Screen.YOUTUBE_SHORT || newScreen == Screen.YOUTUBE_SHORT_POSSIBLE) && blockYouTubeShorts
 
-        if (isTargetReel || isTargetShort) {
+        if ((isTargetReel || isTargetShort) && isScrollEvent) {
             if (now - lastActionTime > DEBOUNCE_MS) {
                 lastActionTime = now
+                notifyExitStarted()
                 videosWatchedInSession++
                 totalReelsScrolled++
                 totalReelsBlocked++
@@ -182,18 +240,22 @@ class GuardController(private val context: Context) {
     }
 
     fun reset() {
+        currentActivePackage = ""
         currentScreen = Screen.UNKNOWN
         activeVideoSig = null
         videosWatchedInSession = 0
         sessionStartTime = 0L
         lastLeaveVideoTime = 0L
         isExitInProgress = false
+        exitCooldownUntil = 0L
     }
 
     companion object {
-        private const val DEBOUNCE_MS = 300L
-        private const val INITIAL_SETTLING_GRACE_MS = 2000L
-        private const val SESSION_RESET_TIMEOUT_MS = 1500L
+        private const val DEBOUNCE_MS = 600L
+        private const val INITIAL_SETTLING_GRACE_MS = 1500L
+        private const val APP_LAUNCH_GRACE_MS = 2000L
+        private const val SESSION_RESET_TIMEOUT_MS = 1200L
+        private const val EXIT_COOLDOWN_MS = 1500L
 
         const val PREFS_STATS = "inhibit_stats_prefs"
         const val KEY_TOTAL_REELS_SCROLLED = "total_reels_scrolled"

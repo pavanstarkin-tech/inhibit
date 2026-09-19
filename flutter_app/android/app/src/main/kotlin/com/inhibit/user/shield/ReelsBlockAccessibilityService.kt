@@ -242,6 +242,21 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
         val eventClassName = event.className?.toString().orEmpty()
         val eventType = event.eventType
 
+        // Never process our own app's events
+        if (eventPkg == packageName) return
+
+        // 1. Check if user is outside Instagram / YouTube (e.g. Launcher, App Switcher, other apps)
+        val isTargetApp = (eventPkg == ScreenDetector.PKG_INSTAGRAM || eventPkg == ScreenDetector.PKG_YOUTUBE)
+        if (!isTargetApp) {
+            if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED && eventPkg.isNotEmpty()) {
+                guardController.onOutsidePackageDetected(eventPkg)
+            }
+            return
+        }
+
+        // 2. Target app is active
+        guardController.onAppForegrounded(eventPkg)
+
         if (eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
             eventType != AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED &&
             eventType != AccessibilityEvent.TYPE_VIEW_SCROLLED &&
@@ -258,12 +273,6 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
             }
             lastContentEventTime = nowUptime
         }
-
-        // Never process our own app's events or if our app is in the foreground
-        if (eventPkg == packageName) return
-
-        val isEventTarget = (eventPkg == ScreenDetector.PKG_INSTAGRAM || eventPkg == ScreenDetector.PKG_YOUTUBE)
-        if (!isEventTarget) return
 
         val targetPkg = eventPkg
 
@@ -393,10 +402,11 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
 
     /**
      * Executes safe, in-app navigation to the target app's Homepage.
-     * NEVER closes the app or exits to the Android launcher.
+     * Guaranteed NEVER to close the app or exit to the Android launcher.
      * Priority 1: In-app Home Tab Click (Bottom Navigation Bar / Pivot Bar)
      * Priority 2: In-app Close/Back Button Click (Full-screen Modal / Overlay)
-     * Priority 3: Bring Target App to Front on its Main/Home Activity via Intent
+     * Priority 3: Single Global Back (Only if in-app buttons cannot be resolved)
+     * Priority 4: Bring Target App to Front on Home Activity via Single-Top Intent
      */
     private fun redirectToHomeTab(pkg: String, currentScreen: Screen, message: String, totalBlocked: Int) {
         if (exitInProgress) {
@@ -405,61 +415,53 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
         }
 
         exitInProgress = true
-        exitAttempts = 0
-        guardController.isExitInProgress = true
+        exitAttempts = 1
+        guardController.notifyExitStarted()
 
-        Log.d("INHIBIT_SERVICE", "BLOCK EXIT START: package=$pkg, screen=$currentScreen, attempts=$exitAttempts")
+        Log.d("INHIBIT_SERVICE", "BLOCK EXIT START: package=$pkg, screen=$currentScreen")
 
         // 1. Show immediate debounced feedback
         showDebouncedToast(message)
-        showPushAlertNotification("🚫 Inhibit: Blocked", "$message (Total Blocked: $totalBlocked)")
+        showPushAlertNotification("🚫 Inhibit: Intercepted", "$message (Total Blocked: $totalBlocked)")
 
-        fun performInAppHomeNavigation(): Boolean {
-            // Verify active window is strictly the target package before sending back
-            val activePkg = try { rootInActiveWindow?.packageName?.toString().orEmpty() } catch (_: Exception) { "" }
-            if (activePkg.isNotEmpty() && activePkg != pkg) {
-                Log.d("INHIBIT_SERVICE", "EXIT ACTION ABORTED: active window ($activePkg) does not match target ($pkg)")
+        // Safe in-app navigation helper
+        fun performSafeHomeNavigation(): Boolean {
+            try {
+                val activeRoot = rootInActiveWindow
+                val activePkg = activeRoot?.packageName?.toString().orEmpty()
+                if (activePkg.isNotEmpty() && activePkg != pkg) {
+                    Log.d("INHIBIT_SERVICE", "EXIT ABORTED: active window ($activePkg) does not match target ($pkg)")
+                    return false
+                }
+
+                // Priority 1: In-app Home Tab Click (Bottom Navigation Bar / Pivot Bar)
+                val homeNode = detector.findHomeTabNode(activeRoot)
+                if (homeNode != null && detector.performDeepClick(homeNode)) {
+                    Log.d("INHIBIT_SERVICE", "EXIT: In-app Home Tab clicked successfully for $pkg")
+                    return true
+                }
+
+                // Priority 2: In-app Close/Back Button Click (Full-screen Modal / Overlay)
+                val closeNode = detector.findInAppCloseOrBackNode(activeRoot)
+                if (closeNode != null && detector.performDeepClick(closeNode)) {
+                    Log.d("INHIBIT_SERVICE", "EXIT: In-app Close/Back button clicked successfully for $pkg")
+                    return true
+                }
+
+                // Priority 3: Single Global Back (Fallback) - NEVER REPEAT
+                val backSuccess = performGlobalAction(GLOBAL_ACTION_BACK)
+                Log.d("INHIBIT_SERVICE", "EXIT: Fallback single GLOBAL_ACTION_BACK ($backSuccess)")
+                return backSuccess
+            } catch (e: Exception) {
+                Log.e("INHIBIT_SERVICE", "Error during in-app navigation for $pkg", e)
                 return false
             }
-
-            // Priority 1: Safe Global Back (instant, native, zero-glitch exit for full-screen Reels & Shorts)
-            try {
-                val backSuccess = performGlobalAction(GLOBAL_ACTION_BACK)
-                if (backSuccess) {
-                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: GLOBAL_ACTION_BACK success for $pkg")
-                    return true
-                }
-            } catch (e: Exception) {
-                Log.e("INHIBIT_SERVICE", "Error performing global back for $pkg", e)
-            }
-
-            // Priority 2: In-app Close/Back Button
-            try {
-                val currentRoot = rootInActiveWindow
-                val closeNode = detector.findInAppCloseOrBackNode(currentRoot)
-                if (closeNode != null && detector.performDeepClick(closeNode)) {
-                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: IN_APP_CLOSE_CLICK success for $pkg")
-                    return true
-                }
-
-                // Priority 3: In-app Home Tab Click (Bottom Navigation Bar / Pivot Bar)
-                val homeNode = detector.findHomeTabNode(currentRoot)
-                if (homeNode != null && detector.performDeepClick(homeNode)) {
-                    Log.d("INHIBIT_SERVICE", "EXIT ACTION: IN_APP_HOME_CLICK success for $pkg")
-                    return true
-                }
-            } catch (e: Exception) {
-                Log.e("INHIBIT_SERVICE", "Error during in-app node search", e)
-            }
-
-            return false
         }
 
-        // Attempt 1: Immediate In-App Navigation
-        exitAttempts = 1
-        performInAppHomeNavigation()
+        // Execute primary navigation
+        performSafeHomeNavigation()
 
-        // Post-delay check with fresh root
+        // Post-delay verification check
         mainHandler.postDelayed({
             try {
                 val freshResolved = resolveTargetAppRoot(pkg, null)
@@ -469,38 +471,43 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
                 } else {
                     Screen.UNKNOWN
                 }
-                Log.d("INHIBIT_SERVICE", "EXIT FRESH ROOT: screen=$freshScreen")
+                Log.d("INHIBIT_SERVICE", "EXIT VERIFY: screen=$freshScreen")
 
                 val isStillShort = (freshScreen == Screen.INSTAGRAM_REEL ||
                                     freshScreen == Screen.YOUTUBE_SHORT ||
                                     freshScreen == Screen.INSTAGRAM_REEL_POSSIBLE ||
                                     freshScreen == Screen.YOUTUBE_SHORT_POSSIBLE)
 
-                if (!isStillShort) {
-                    Log.d("INHIBIT_SERVICE", "EXIT DECISION: action=NONE (landed on safe surface $freshScreen)")
-                    finishExitSequence()
-                } else {
-                    // Attempt 2: Still on short-video viewer -> Retry in-app navigation
-                    exitAttempts = 2
-                    val retrySuccess = performInAppHomeNavigation()
-                    Log.d("INHIBIT_SERVICE", "EXIT ATTEMPT 2: performInAppHomeNavigation result=$retrySuccess")
-
-                    mainHandler.postDelayed({
-                        finishExitSequence()
-                    }, 250L)
+                if (isStillShort) {
+                    // If still on short-video container, DO NOT execute another back action (prevents closing app)
+                    // Instead, try finding the Home Tab again or bring target app's home activity to front
+                    val retryHomeNode = detector.findHomeTabNode(freshRoot)
+                    if (retryHomeNode != null && detector.performDeepClick(retryHomeNode)) {
+                        Log.d("INHIBIT_SERVICE", "EXIT VERIFY: Home tab clicked on retry for $pkg")
+                    } else {
+                        // Bring target app to front on its main task
+                        val launchIntent = packageManager.getLaunchIntentForPackage(pkg)?.apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        }
+                        if (launchIntent != null) {
+                            Log.d("INHIBIT_SERVICE", "EXIT VERIFY: Bringing $pkg to front via Main Intent")
+                            startActivity(launchIntent)
+                        }
+                    }
                 }
             } catch (e: Exception) {
-                Log.e("INHIBIT_SERVICE", "Error during safe exit verification", e)
+                Log.e("INHIBIT_SERVICE", "Error during exit verification", e)
+            } finally {
                 finishExitSequence()
             }
-        }, 250L)
+        }, 350L)
     }
 
     private fun finishExitSequence() {
         Log.d("INHIBIT_SERVICE", "BLOCK EXIT COMPLETE")
         exitInProgress = false
         exitAttempts = 0
-        guardController.isExitInProgress = false
+        guardController.notifyExitCompleted()
     }
 
     private fun createNotificationChannels() {
