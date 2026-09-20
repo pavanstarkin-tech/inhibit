@@ -73,6 +73,7 @@ class GuardController(private val context: Context) {
         if (currentLives > 0) {
             val newLives = currentLives - 1
             prefs.edit().putInt(KEY_REMAINING_LIVES, newLives).apply()
+            syncWithFlutterPrefs(newLives)
             startPostMode(30)
             Log.d("INHIBIT_GUARD", "Consumed 1 life ($newLives lives left). 30-minute session started.")
             return true
@@ -86,6 +87,18 @@ class GuardController(private val context: Context) {
         return true
     }
 
+    private fun syncWithFlutterPrefs(lives: Int) {
+        try {
+            val flutterPrefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val cal = java.util.Calendar.getInstance()
+            val dateStr = "${cal.get(java.util.Calendar.YEAR)}-${cal.get(java.util.Calendar.MONTH) + 1}-${cal.get(java.util.Calendar.DAY_OF_MONTH)}"
+            flutterPrefs.edit()
+                .putInt("flutter.noscroll.post_unlocks_count", lives)
+                .putString("flutter.noscroll.post_unlocks_date", dateStr)
+                .apply()
+        } catch (_: Exception) {}
+    }
+
     private fun checkDailyLivesReset() {
         val todayDay = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
         val lastResetDay = prefs.getInt(KEY_LAST_LIVES_RESET_DAY, -1)
@@ -94,6 +107,7 @@ class GuardController(private val context: Context) {
                 .putInt(KEY_LAST_LIVES_RESET_DAY, todayDay)
                 .putInt(KEY_REMAINING_LIVES, DEFAULT_LIVES)
                 .apply()
+            syncWithFlutterPrefs(DEFAULT_LIVES)
             Log.d("INHIBIT_GUARD", "Daily free lives replenished to $DEFAULT_LIVES.")
         }
     }

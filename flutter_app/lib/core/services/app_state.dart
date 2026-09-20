@@ -198,6 +198,7 @@ class AppState extends ChangeNotifier {
     await _loadAssets();
     await checkAccessibilityPermission();
     await _syncNativeShieldRules();
+    await syncPostModeState();
 
     // Check for pending launch from ShieldActivity
     final pendingSvc = await NativeShieldService.getPendingLaunchService();
@@ -351,69 +352,36 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool usePostUnlock() {
-    _restorePostMode();
-    if (_postModeUnlocksRemaining > 0) {
-      _postModeUnlocksRemaining--;
-      _prefs.setInt(_keyPostUnlocksCount, _postModeUnlocksRemaining);
-      notifyListeners();
-      return true;
-    }
-    return false;
+  Future<bool> usePostUnlock() async {
+    final success = await NativeShieldService.consumeLife();
+    await syncPostModeState();
+    return success;
   }
 
   Future<bool> startPostSession({int durationMinutes = 30}) async {
-    _restorePostMode();
+    await syncPostModeState();
     if (_postModeUnlocksRemaining <= 0 && !_isPostModeActive) {
       return false;
     }
 
     if (!_isPostModeActive) {
-      _postModeUnlocksRemaining--;
-      await _prefs.setInt(_keyPostUnlocksCount, _postModeUnlocksRemaining);
+      final success = await NativeShieldService.consumeLife();
+      if (!success) {
+        await syncPostModeState();
+        return false;
+      }
+    } else {
+      await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
     }
 
-    await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
-    _isPostModeActive = true;
-    _postModeRemainingSeconds = durationMinutes * 60;
-
-    _postModeTimer?.cancel();
-    _postModeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_postModeRemainingSeconds > 0) {
-        _postModeRemainingSeconds--;
-        notifyListeners();
-      } else {
-        _isPostModeActive = false;
-        _postModeRemainingSeconds = 0;
-        timer.cancel();
-        notifyListeners();
-      }
-    });
-
-    notifyListeners();
+    await syncPostModeState();
     return true;
   }
 
   Future<bool> startPostSessionWithPayment({int durationMinutes = 30}) async {
     await NativeShieldService.simulatePaymentUnlock();
     await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
-    _isPostModeActive = true;
-    _postModeRemainingSeconds = durationMinutes * 60;
-
-    _postModeTimer?.cancel();
-    _postModeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_postModeRemainingSeconds > 0) {
-        _postModeRemainingSeconds--;
-        notifyListeners();
-      } else {
-        _isPostModeActive = false;
-        _postModeRemainingSeconds = 0;
-        timer.cancel();
-        notifyListeners();
-      }
-    });
-
-    notifyListeners();
+    await syncPostModeState();
     return true;
   }
 
@@ -422,10 +390,14 @@ class AppState extends ChangeNotifier {
     _isPostModeActive = false;
     _postModeRemainingSeconds = 0;
     _postModeTimer?.cancel();
-    notifyListeners();
+    await syncPostModeState();
   }
 
   Future<void> syncPostModeState() async {
+    final lives = await NativeShieldService.getRemainingLives();
+    _postModeUnlocksRemaining = lives;
+    await _prefs.setInt(_keyPostUnlocksCount, lives);
+
     final active = await NativeShieldService.isPostModeActive();
     final remainingSec = await NativeShieldService.getPostModeRemainingSeconds();
     _isPostModeActive = active;
@@ -444,6 +416,10 @@ class AppState extends ChangeNotifier {
           notifyListeners();
         }
       });
+    } else {
+      _postModeTimer?.cancel();
+      _isPostModeActive = false;
+      _postModeRemainingSeconds = 0;
     }
     notifyListeners();
   }

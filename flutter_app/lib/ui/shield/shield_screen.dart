@@ -29,6 +29,7 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.appState.checkAccessibilityPermission();
+    widget.appState.syncPostModeState();
   }
 
   @override
@@ -41,6 +42,7 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       widget.appState.checkAccessibilityPermission();
+      widget.appState.syncPostModeState();
     }
   }
 
