@@ -337,7 +337,7 @@ export default function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button 
               onClick={() => setShowDownloadModal(true)}
-              className="neo-btn"
+              className="neo-btn hidden-on-mobile"
               style={{ padding: '8px 14px', fontSize: '13px', backgroundColor: 'var(--accent-yellow)' }}
             >
               <PlayStoreIcon size={15} />
@@ -360,6 +360,14 @@ export default function App() {
         {mobileMenuOpen && (
           <div className="visible-on-mobile" style={{ flexDirection: 'column', gap: '12px', padding: '16px 0 8px', borderTop: '2px solid #000', marginTop: '12px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontWeight: 800, fontSize: '14px' }}>
+              <button 
+                onClick={() => { setMobileMenuOpen(false); setShowDownloadModal(true); }}
+                className="neo-btn"
+                style={{ padding: '10px 14px', fontSize: '14px', backgroundColor: 'var(--accent-yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', width: '100%' }}
+              >
+                <PlayStoreIcon size={16} />
+                <span>Get on Play Store</span>
+              </button>
               <a 
                 href="#features" 
                 onClick={() => setMobileMenuOpen(false)}
