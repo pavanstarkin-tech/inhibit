@@ -50,9 +50,9 @@
         <activity
             android:name=".shield.ShieldActivity"
             android:exported="false"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:launchMode="singleTask"
-            android:taskAffinity=""
+            android:theme="@style/Theme.TransparentDialog"
+            android:launchMode="singleTop"
+            android:noHistory="true"
             android:excludeFromRecents="true" />
     </application>
     <!-- Required to query activities that can process text, see:

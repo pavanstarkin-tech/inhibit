@@ -488,14 +488,18 @@ class ScreenDetector {
                              snapshot.hasDescContaining("stories tray")
 
         val hasGridStructure = snapshot.descriptions.any { it.contains("at row ") && it.contains("column") }
-        val hasHomeFeedMarkers = snapshot.hasIdAny("main_feed", "feed_post") ||
+        val hasHomeFeedMarkers = snapshot.hasIdAny("main_feed", "feed_post", "row_feed_photo_profile_name", "row_feed_profile_picture", "logo_button", "direct_action_bar_button") ||
                                  snapshot.hasDescAny("activity feed", "your story")
 
-        val hasClipsViewerElements = snapshot.viewIds.any { id ->
-            (id.contains("clips_") || id.contains("reel_viewer") || id.contains("root_clips")) && !id.contains("clips_tab")
-        }
+        val hasDedicatedClipsContainer = snapshot.hasIdAny(
+            "clips_viewer_view_pager",
+            "clips_viewer_viewpager",
+            "clips_swipe_refresh_container",
+            "clips_video_container",
+            "reel_viewer_container"
+        )
 
-        if ((hasStoriesTray || hasGridStructure || hasHomeFeedMarkers) && !hasClipsViewerElements && !hasClipsClass && !snapshot.hasVerticalFullScreenVideo) {
+        if ((hasStoriesTray || hasGridStructure || hasHomeFeedMarkers) && !hasDedicatedClipsContainer && !hasClipsClass) {
             return InstagramEvaluation(
                 score = 0,
                 hasStrongStructure = false,
@@ -518,7 +522,7 @@ class ScreenDetector {
             (id.contains("clips_") || id.contains("reel_viewer") || id.contains("root_clips")) && !id.contains("clips_tab")
         }
 
-        val hasVideoContainerId = hasClipsWildcardId || snapshot.hasIdAny(
+        val hasVideoContainerId = hasDedicatedClipsContainer || hasClipsWildcardId || snapshot.hasIdAny(
             "clips_video_container",
             "clips_item_container",
             "reel_viewer_container",
@@ -528,8 +532,7 @@ class ScreenDetector {
             "clips_overlay_container",
             "clips_action_bar_container",
             "clips_ufi_container",
-            "clips_video_surface_view",
-            "video_container"
+            "clips_video_surface_view"
         )
         val hasVideoContainer = hasVideoContainerId || snapshot.hasVerticalFullScreenVideo
         if (hasVideoContainer) {

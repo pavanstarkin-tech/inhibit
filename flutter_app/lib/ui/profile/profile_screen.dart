@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/models/service_model.dart';
 import '../../core/services/app_state.dart';
 import '../components/neo_card.dart';
-import '../settings/settings_menu_screen.dart';
+import '../components/neo_top_bar.dart';
 import '../theme/app_theme.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -37,52 +37,8 @@ class ProfileScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Top Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 20),
-                  ),
-                  const Text(
-                    'You & Privacy',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                      color: Colors.black,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => SettingsMenuScreen(
-                            appState: appState,
-                          ),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.borderBlack, width: 2),
-                        boxShadow: AppTheme.hardShadow(offset: const Offset(2, 2)),
-                      ),
-                      child: const Icon(Icons.settings_outlined, color: Colors.black, size: 20),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
+              NeoTopBar(appState: appState),
+              const SizedBox(height: 14),
 
               // Card 1: YOUR IMPACT (Screen 11)
               NeoCard(

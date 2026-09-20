@@ -4,6 +4,7 @@ import '../components/neo_badge.dart';
 import '../components/neo_button.dart';
 import '../components/neo_card.dart';
 import '../components/neo_switch.dart';
+import '../components/neo_top_bar.dart';
 import '../theme/app_theme.dart';
 
 class ShieldScreen extends StatefulWidget {
@@ -60,42 +61,8 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Top Bar
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          if (widget.onBack != null) {
-                            widget.onBack!();
-                          } else if (Navigator.of(context).canPop()) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: AppTheme.borderBlack, width: 2),
-                            boxShadow: AppTheme.hardShadow(offset: const Offset(2, 2)),
-                          ),
-                          child: const Icon(Icons.arrow_back, color: Colors.black, size: 20),
-                        ),
-                      ),
-                      const Text(
-                        'Shield & Post Mode',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          color: Colors.black,
-                        ),
-                      ),
-                      const SizedBox(width: 38), // Balanced alignment
-                    ],
-                  ),
-                  const SizedBox(height: 18),
+                  NeoTopBar(appState: widget.appState),
+                  const SizedBox(height: 14),
 
                   // Card 1: Intentional Post Mode (Active Session or Unlock View)
                   _buildIntentionalPostCard(unlocksRemaining, isPostMode),
@@ -169,51 +136,23 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: AppTheme.accentGreen,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.borderBlack, width: 2),
-                  ),
-                  child: const Icon(Icons.timer_rounded, color: Colors.black, size: 24),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Post Mode Active',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(height: 3),
-                      Text(
-                        'Distraction shield suspended to create and publish content.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF166534),
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const NeoBadge(
-                  text: 'ACTIVE',
-                  backgroundColor: AppTheme.accentGreen,
-                  fontSize: 10,
-                  borderWidth: 1.5,
-                ),
-              ],
+            const Text(
+              'Post Mode Active',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 3),
+            const Text(
+              'Distraction shield suspended to create and publish content.',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF166534),
+                height: 1.3,
+              ),
             ),
             const SizedBox(height: 16),
 
@@ -303,6 +242,8 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
       );
     }
 
+    final hasFreeLives = unlocksRemaining > 0;
+
     return NeoCard(
       backgroundColor: Colors.white,
       padding: const EdgeInsets.all(16),
@@ -310,48 +251,32 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTheme.accentBlue,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.borderBlack, width: 2),
+              const Text(
+                'Intentional Post Mode',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black,
                 ),
-                child: const Icon(Icons.edit_note_rounded, color: Colors.black, size: 24),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Intentional Post Mode',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      'Get 4 daily unlocks to create and post content, without distractions.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF555555),
-                        height: 1.3,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 3),
+              Text(
+                hasFreeLives
+                    ? 'Get 4 daily unlocks to create and post content without distraction deflection.'
+                    : 'You have used all 4 daily lives for today. Request extra time below.',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF555555),
+                  height: 1.3,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
           // Unlocks counter
           Center(
@@ -366,12 +291,12 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
                     color: Colors.black,
                   ),
                 ),
-                const Text(
-                  'unlocks remaining today',
+                Text(
+                  hasFreeLives ? 'free daily unlocks remaining today' : 'free daily lives exhausted',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF666666),
+                    color: hasFreeLives ? const Color(0xFF666666) : const Color(0xFFDC2626),
                   ),
                 ),
               ],
@@ -379,22 +304,39 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
           ),
           const SizedBox(height: 16),
 
-          // Yellow Button: UNLOCK FOR 30 MIN
-          NeoButton(
-            text: 'UNLOCK FOR 30 MIN',
-            backgroundColor: AppTheme.accentYellow,
-            textColor: Colors.black,
-            isFullWidth: true,
-            height: 46,
-            fontSize: 13,
-            onPressed: unlocksRemaining > 0
-                ? () => _handleUnlockPostSession(context)
-                : () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('All 4 daily post unlocks used for today.')),
-                    );
-                  },
-          ),
+          if (hasFreeLives) ...[
+            // Yellow Button: UNLOCK FOR 30 MIN (1 LIFE)
+            NeoButton(
+              text: 'UNLOCK FOR 30 MIN (USE 1 LIFE)',
+              backgroundColor: AppTheme.accentYellow,
+              textColor: Colors.black,
+              isFullWidth: true,
+              height: 46,
+              fontSize: 13,
+              onPressed: () => _handleUnlockPostSession(context),
+            ),
+          ] else ...[
+            // When 4 of 4 completed: Provide Request 30 Mins+ (₹10) and Request 60 Mins+ (₹20)
+            NeoButton(
+              text: '⚡ REQUEST 30 MINS+ (₹10)',
+              backgroundColor: const Color(0xFFFFD1DC),
+              textColor: Colors.black,
+              isFullWidth: true,
+              height: 46,
+              fontSize: 13,
+              onPressed: () => _showSimulatedPaymentDialog(context, durationMinutes: 30, amountRupees: 10),
+            ),
+            const SizedBox(height: 8),
+            NeoButton(
+              text: '⚡ REQUEST 60 MINS+ (₹20)',
+              backgroundColor: const Color(0xFFE0E7FF),
+              textColor: Colors.black,
+              isFullWidth: true,
+              height: 42,
+              fontSize: 12,
+              onPressed: () => _showSimulatedPaymentDialog(context, durationMinutes: 60, amountRupees: 20),
+            ),
+          ],
         ],
       ),
     );
@@ -583,6 +525,118 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
             onPressed: () {
               Navigator.of(ctx).pop();
               widget.onOpenPostService('instagram');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSimulatedPaymentDialog(BuildContext context, {required int durationMinutes, required int amountRupees}) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.bgMain,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: const BorderSide(color: Colors.black, width: 3),
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: AppTheme.accentYellow,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+              ),
+              child: const Icon(Icons.flash_on_rounded, color: Colors.black, size: 20),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'Unlock $durationMinutes Mins',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF9C3),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+                boxShadow: AppTheme.hardShadow(offset: const Offset(3, 3)),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'TOTAL AMOUNT',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: Color(0xFF555555)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '₹$amountRupees.00',
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                      letterSpacing: -1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentGreen,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: AppTheme.borderBlack, width: 1.5),
+                    ),
+                    child: const Text(
+                      'SIMULATED PAYMENT',
+                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Colors.black),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              '• Unlocks full Reels & Shorts access for the duration.\n• Simulated instant checkout (No card/UPI deduction).\n• Auto re-locks as soon as time expires.',
+              style: TextStyle(fontSize: 12, height: 1.4, fontWeight: FontWeight.w600, color: Color(0xFF333333)),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('CANCEL', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black)),
+          ),
+          NeoButton(
+            text: 'PAY ₹$amountRupees & UNLOCK →',
+            backgroundColor: AppTheme.accentGreen,
+            textColor: Colors.black,
+            height: 42,
+            fontSize: 12,
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              final success = await widget.appState.startPostSessionWithPayment(durationMinutes: durationMinutes);
+              if (success && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.black,
+                    content: Text(
+                      'Payment Simulated! Unlocked $durationMinutes minutes of intentional posting.',
+                      style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                    ),
+                  ),
+                );
+              }
             },
           ),
         ],

@@ -139,6 +139,45 @@ class NativeShieldService {
     }
   }
 
+  static Future<int> getRemainingLives() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return 4;
+    }
+    try {
+      final int? res = await _channel.invokeMethod<int>('getRemainingLives');
+      return res ?? 4;
+    } catch (e) {
+      if (kDebugMode) print('Error getting remaining lives: $e');
+      return 4;
+    }
+  }
+
+  static Future<bool> consumeLife() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return true;
+    }
+    try {
+      final bool? res = await _channel.invokeMethod<bool>('consumeLife');
+      return res ?? false;
+    } catch (e) {
+      if (kDebugMode) print('Error consuming life: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> simulatePaymentUnlock() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return true;
+    }
+    try {
+      final bool? res = await _channel.invokeMethod<bool>('simulatePaymentUnlock');
+      return res ?? false;
+    } catch (e) {
+      if (kDebugMode) print('Error simulating payment unlock: $e');
+      return false;
+    }
+  }
+
   static Future<bool> openUrl(String url) async {
     try {
       final bool? res = await _channel.invokeMethod<bool>('openUrl', {'url': url});

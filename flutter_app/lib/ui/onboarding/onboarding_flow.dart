@@ -1,7 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/models/life_in_weeks.dart';
 import '../../core/services/app_state.dart';
-import '../components/neo_badge.dart';
 import '../components/neo_button.dart';
 import '../components/neo_card.dart';
 import '../components/neo_switch.dart';
@@ -32,15 +32,65 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
   bool _enableSleep = true;
   bool _limitPosts = true;
 
+  // Accessibility Permission Slider
+  final PageController _permissionPageController = PageController();
+  int _permissionImageIndex = 0;
+  Timer? _permissionCarouselTimer;
+
+  final List<Map<String, String>> _permissionSteps = const [
+    {
+      'image': 'assets/accesability/1.jpeg',
+      'step': 'STEP 1 OF 4',
+      'title': 'Open Accessibility Settings',
+      'desc': 'Tap button in bottom right to open Android Accessibility settings.',
+    },
+    {
+      'image': 'assets/accesability/2.jpeg',
+      'step': 'STEP 2 OF 4',
+      'title': 'Select "Inhibit"',
+      'desc': 'Find and tap "Inhibit" under Downloaded / Installed apps.',
+    },
+    {
+      'image': 'assets/accesability/4.jpeg',
+      'step': 'STEP 3 OF 4',
+      'title': 'Turn Inhibit ON',
+      'desc': 'Toggle the switch to enable 24/7 Shield protection.',
+    },
+    {
+      'image': 'assets/accesability/3.jpeg',
+      'step': 'STEP 4 OF 4',
+      'title': 'Tap "Allow" to Activate',
+      'desc': 'Confirm permission to start auto-shielding your doomscrolling!',
+    },
+  ];
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.appState.checkAccessibilityPermission();
+    _startPermissionCarouselTimer();
+  }
+
+  void _startPermissionCarouselTimer() {
+    _permissionCarouselTimer?.cancel();
+    _permissionCarouselTimer = Timer.periodic(const Duration(milliseconds: 3200), (timer) {
+      if (!mounted) return;
+      if (_currentStep == 4 && _permissionPageController.hasClients) {
+        final next = (_permissionImageIndex + 1) % _permissionSteps.length;
+        _permissionPageController.animateToPage(
+          next,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _permissionCarouselTimer?.cancel();
+    _permissionPageController.dispose();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -159,26 +209,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
       key: const ValueKey('step_1_welcome'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Top badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.borderBlack, width: 2),
-            boxShadow: AppTheme.hardShadow(offset: const Offset(2, 2)),
-          ),
-          child: const Text(
-            'Onboarding 1',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              color: Colors.black,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
 
         // Logo Image
         Image.asset(
@@ -204,7 +235,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
           ),
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // Center Hero Welcome Art (clean image without border/background)
         Expanded(
@@ -225,45 +256,7 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
           ),
         ),
 
-        const SizedBox(height: 10),
-
-        // 3 Dots Pagination
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.black,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.black, width: 1.5),
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 6),
+        const SizedBox(height: 12),
       ],
     );
   }
@@ -482,53 +475,53 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
 
           const SizedBox(height: 14),
 
-          // Two side-by-side callout cards
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 6,
-                child: NeoCard(
-                  backgroundColor: AppTheme.accentYellow,
-                  padding: const EdgeInsets.all(12),
-                  shadowOffset: const Offset(3, 3),
-                  child: Text(
-                    "That's ${(life.yearsLostToScrolling * 52).toInt()} weeks\n(~${life.yearsLostToScrolling.toStringAsFixed(1)} years) lost\nto doomscrolling.",
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                flex: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppTheme.borderBlack, width: 2),
-                    boxShadow: AppTheme.hardShadow(offset: const Offset(3, 3)),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      "Let's\ntake some\nof those back.",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black,
-                        height: 1.2,
+          // Two side-by-side callout cards with equal height
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: 6,
+                  child: NeoCard(
+                    backgroundColor: AppTheme.accentYellow,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    shadowOffset: const Offset(3, 3),
+                    child: Center(
+                      child: Text(
+                        "That's ${(life.yearsLostToScrolling * 52).toInt()} weeks\n(~${life.yearsLostToScrolling.toStringAsFixed(1)} years) lost\nto doomscrolling.",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                          height: 1.3,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                const Expanded(
+                  flex: 4,
+                  child: NeoCard(
+                    backgroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                    shadowOffset: Offset(3, 3),
+                    child: Center(
+                      child: Text(
+                        "Let's\ntake some\nof those back.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -719,160 +712,235 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
 
         return SingleChildScrollView(
           key: const ValueKey('step_5_permission'),
+          physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppTheme.borderBlack, width: 2),
-                      boxShadow: AppTheme.hardShadow(offset: const Offset(2, 2)),
-                    ),
-                    child: const Text(
-                      'MANDATORY STEP',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.black),
-                    ),
-                  ),
-                  NeoBadge(
-                    text: isGranted ? 'SHIELD READY' : 'ACTION REQUIRED',
-                    backgroundColor: isGranted ? AppTheme.accentGreen : AppTheme.accentYellow,
-                    fontSize: 10,
-                    borderWidth: 1.5,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-
-              const Text(
-                'ENABLE DEVICE\nAPP SHIELDING',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -0.5,
-                  height: 1.1,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              const Text(
-                'Inhibit requires Android Accessibility permission to detect and intercept doomscrolling inside official Instagram and YouTube apps.',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF444444), height: 1.3),
-              ),
-              const SizedBox(height: 16),
-
-              // Main Shield Status Card
+              // ==========================================
+              // HERO SECTION: ACCESSIBILITY SHIELD CARD (COMPACT)
+              // ==========================================
               NeoCard(
                 backgroundColor: isGranted ? const Color(0xFFD1FAE5) : Colors.white,
-                padding: const EdgeInsets.all(16),
-                shadowOffset: const Offset(4, 4),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: isGranted ? AppTheme.accentGreen : AppTheme.accentYellow,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: AppTheme.borderBlack, width: 2),
-                          ),
-                          child: Icon(
-                            isGranted ? Icons.shield_rounded : Icons.shield_outlined,
-                            color: Colors.black,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                isGranted ? 'App Shield Active' : 'Shielding Disabled',
-                                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.black),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                isGranted
-                                    ? 'Instagram & YouTube protection active'
-                                    : 'Permission required to access app',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: isGranted ? const Color(0xFF16A34A) : const Color(0xFFB45309),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (!isGranted) ...[
-                      const SizedBox(height: 14),
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: AppTheme.borderBlack, width: 1.5),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'How to enable in 3 steps:',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              '1. Tap "ENABLE IN SETTINGS" below\n2. Select "Installed apps" or "Inhibit"\n3. Turn "Inhibit Shield" ON',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF444444), height: 1.4),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Privacy & Security Guarantee Card
-              NeoCard(
-                backgroundColor: const Color(0xFFFEF9C3),
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 shadowOffset: const Offset(3, 3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.lock_outline_rounded, size: 18, color: Colors.black),
-                        SizedBox(width: 8),
-                        Text(
-                          'YOUR PRIVACY IS PROTECTED',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.5, color: Colors.black),
-                        ),
-                      ],
+                    Text(
+                      isGranted ? '24/7 Shield Protection Active' : 'Enable Device App Shielding',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.3,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      isGranted
+                          ? 'Doomscrolling detection and swipe deflection active for Instagram & YouTube.'
+                          : 'Auto-stops infinite scroll loops in Instagram & YouTube without accessing personal data.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isGranted ? const Color(0xFF15803D) : const Color(0xFF555555),
+                        height: 1.3,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    _buildPrivacyBullet('100% On-Device Processing', 'Zero logs or analytics sent anywhere.'),
-                    const SizedBox(height: 6),
-                    _buildPrivacyBullet('Zero Personal Data Access', 'Never reads your messages, passwords, or personal feeds.'),
-                    const SizedBox(height: 6),
-                    _buildPrivacyBullet('Targets Doomscrolling Only', 'Only redirects continuous Reels and Shorts swipe loops.'),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: AppTheme.borderBlack, width: 1.2),
+                      ),
+                      child: const Row(
+                        children: [
+                          Icon(Icons.lock_outline_rounded, size: 12, color: Colors.black),
+                          SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              '100% On-Device • Zero logs • Never reads messages or data',
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
+
               const SizedBox(height: 12),
+
+              // ==========================================
+              // STEP-BY-STEP 4-IMAGE AUTO-SLIDER SECTION
+              // ==========================================
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'HOW TO ENABLE STEPS',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    'Step ${_permissionImageIndex + 1} of ${_permissionSteps.length}',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF666666),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Auto-slider Container with enlarged height to fit screenshots fully
+              SizedBox(
+                height: 440,
+                child: PageView.builder(
+                  controller: _permissionPageController,
+                  itemCount: _permissionSteps.length,
+                  onPageChanged: (idx) {
+                    setState(() => _permissionImageIndex = idx);
+                  },
+                  itemBuilder: (context, index) {
+                    final stepData = _permissionSteps[index];
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: NeoCard(
+                        backgroundColor: Colors.white,
+                        padding: const EdgeInsets.all(12),
+                        shadowOffset: const Offset(3, 3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header of each slider card
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.accentYellow,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: AppTheme.borderBlack, width: 1.5),
+                                  ),
+                                  child: Text(
+                                    stepData['step']!,
+                                    style: const TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    stepData['title']!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.black,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              stepData['desc']!,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF555555),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+
+                            // Image Preview Viewport
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: AppTheme.borderBlack, width: 2),
+                                ),
+                                clipBehavior: Clip.antiAlias,
+                                child: Image.asset(
+                                  stepData['image']!,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, __, ___) => Center(
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        const Icon(Icons.touch_app_rounded, size: 36, color: Colors.black54),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          stepData['title']!,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Carousel Dots Indicator
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_permissionSteps.length, (i) {
+                  final isCurrent = i == _permissionImageIndex;
+                  return GestureDetector(
+                    onTap: () {
+                      _permissionPageController.animateToPage(
+                        i,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: isCurrent ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isCurrent ? Colors.black : Colors.white,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.black, width: 1.5),
+                      ),
+                    ),
+                  );
+                }),
+              ),
+
+              const SizedBox(height: 8),
             ],
           ),
         );
@@ -880,34 +948,70 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
     );
   }
 
-  Widget _buildPrivacyBullet(String title, String subtitle) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 2),
-          child: Icon(Icons.check_circle_rounded, size: 14, color: Colors.black),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: const TextStyle(fontSize: 11, color: Colors.black, height: 1.3),
-              children: [
-                TextSpan(text: '$title: ', style: const TextStyle(fontWeight: FontWeight.w900)),
-                TextSpan(text: subtitle, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF444444))),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
+  // ==========================================
+  // BOTTOM BUTTON (RIGHT-ALIGNED ON PERMISSION)
+  // ==========================================
   Widget _buildBottomButton() {
     return ListenableBuilder(
       listenable: widget.appState,
       builder: (context, _) {
+        if (_currentStep == 4) {
+          // Accessibility Permission step: Place the permission button in bottom right
+          final isGranted = widget.appState.isAccessibilityGranted;
+
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left status pill
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: isGranted ? AppTheme.accentGreen : AppTheme.accentYellow,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppTheme.borderBlack, width: 1.5),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isGranted ? 'Permission Active' : 'Setup Required',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+
+              // Right Button: Accessibility Permission Action Button
+              NeoButton(
+                text: isGranted ? 'ACCESS APP →' : 'ENABLE PERMISSION →',
+                backgroundColor: isGranted ? AppTheme.accentGreen : AppTheme.accentYellow,
+                textColor: Colors.black,
+                isFullWidth: false,
+                height: 48,
+                fontSize: 13,
+                onPressed: () {
+                  if (!isGranted) {
+                    widget.appState.openAccessibilitySettings();
+                  } else {
+                    widget.appState.completeOnboarding(
+                      age: _age,
+                      scrollHours: _scrollHours,
+                    );
+                    widget.appState.setSleepEnabled(_enableSleep);
+                    widget.onComplete();
+                  }
+                },
+              ),
+            ],
+          );
+        }
+
+        // Steps 0-3: Full-width continuation buttons
         String buttonText;
         Color buttonBg = AppTheme.accentYellow;
         VoidCallback onPressed = _nextStep;
@@ -916,19 +1020,8 @@ class _OnboardingFlowState extends State<OnboardingFlow> with WidgetsBindingObse
           buttonText = "LET'S BEGIN →";
         } else if (_currentStep < 3) {
           buttonText = "CONTINUE →";
-        } else if (_currentStep == 3) {
-          buttonText = "SET UP PERMISSION →";
         } else {
-          // Step 4: Permission
-          if (widget.appState.isAccessibilityGranted) {
-            buttonText = "PERMISSION GRANTED → ACCESS APP";
-            buttonBg = AppTheme.accentGreen;
-            onPressed = _nextStep;
-          } else {
-            buttonText = "ENABLE IN ANDROID SETTINGS →";
-            buttonBg = AppTheme.accentYellow;
-            onPressed = () => widget.appState.openAccessibilitySettings();
-          }
+          buttonText = "SET UP PERMISSION →";
         }
 
         return NeoButton(

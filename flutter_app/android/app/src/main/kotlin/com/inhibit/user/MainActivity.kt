@@ -1,4 +1,4 @@
-﻿package com.inhibit.user
+package com.inhibit.user
 
 import android.content.Context
 import android.content.Intent
@@ -151,6 +151,18 @@ class MainActivity : FlutterActivity() {
                     val expiresAt = statsPrefs.getLong(com.inhibit.user.shield.GuardController.KEY_POST_MODE_EXPIRES_AT, 0L)
                     val remaining = (expiresAt - System.currentTimeMillis()) / 1000
                     result.success(if (remaining > 0) remaining.toInt() else 0)
+                }
+                "getRemainingLives" -> {
+                    val guard = com.inhibit.user.shield.GuardController(applicationContext)
+                    result.success(guard.getRemainingLives())
+                }
+                "consumeLife" -> {
+                    val guard = com.inhibit.user.shield.GuardController(applicationContext)
+                    result.success(guard.consumeLife())
+                }
+                "simulatePaymentUnlock" -> {
+                    val guard = com.inhibit.user.shield.GuardController(applicationContext)
+                    result.success(guard.simulatePaymentUnlock())
                 }
                 "openUrl" -> {
                     val url = call.argument<String>("url")

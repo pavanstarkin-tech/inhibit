@@ -62,6 +62,42 @@ class GuardController(private val context: Context) {
         get() = prefs.getInt(KEY_TOTAL_REELS_BLOCKED, 0)
         private set(value) = prefs.edit().putInt(KEY_TOTAL_REELS_BLOCKED, value).apply()
 
+    fun getRemainingLives(): Int {
+        checkDailyLivesReset()
+        return prefs.getInt(KEY_REMAINING_LIVES, DEFAULT_LIVES)
+    }
+
+    fun consumeLife(): Boolean {
+        checkDailyLivesReset()
+        val currentLives = prefs.getInt(KEY_REMAINING_LIVES, DEFAULT_LIVES)
+        if (currentLives > 0) {
+            val newLives = currentLives - 1
+            prefs.edit().putInt(KEY_REMAINING_LIVES, newLives).apply()
+            startPostMode(30)
+            Log.d("INHIBIT_GUARD", "Consumed 1 life ($newLives lives left). 30-minute session started.")
+            return true
+        }
+        return false
+    }
+
+    fun simulatePaymentUnlock(durationMinutes: Int = 30): Boolean {
+        startPostMode(durationMinutes)
+        Log.d("INHIBIT_GUARD", "Simulated payment successful. $durationMinutes-minute session started.")
+        return true
+    }
+
+    private fun checkDailyLivesReset() {
+        val todayDay = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_YEAR)
+        val lastResetDay = prefs.getInt(KEY_LAST_LIVES_RESET_DAY, -1)
+        if (lastResetDay != todayDay) {
+            prefs.edit()
+                .putInt(KEY_LAST_LIVES_RESET_DAY, todayDay)
+                .putInt(KEY_REMAINING_LIVES, DEFAULT_LIVES)
+                .apply()
+            Log.d("INHIBIT_GUARD", "Daily free lives replenished to $DEFAULT_LIVES.")
+        }
+    }
+
     /**
      * Called when an outside package (Launcher, Settings, or another app) is active.
      * Instantly resets session state so opening Instagram/YouTube starts completely fresh.
@@ -263,5 +299,8 @@ class GuardController(private val context: Context) {
         const val KEY_TOTAL_REELS_SCROLLED = "total_reels_scrolled"
         const val KEY_TOTAL_REELS_BLOCKED = "total_reels_blocked"
         const val KEY_POST_MODE_EXPIRES_AT = "post_mode_expires_at"
+        const val KEY_REMAINING_LIVES = "remaining_free_lives"
+        const val KEY_LAST_LIVES_RESET_DAY = "last_lives_reset_day"
+        const val DEFAULT_LIVES = 4
     }
 }

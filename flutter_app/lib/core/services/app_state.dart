@@ -394,6 +394,29 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
+  Future<bool> startPostSessionWithPayment({int durationMinutes = 30}) async {
+    await NativeShieldService.simulatePaymentUnlock();
+    await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
+    _isPostModeActive = true;
+    _postModeRemainingSeconds = durationMinutes * 60;
+
+    _postModeTimer?.cancel();
+    _postModeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_postModeRemainingSeconds > 0) {
+        _postModeRemainingSeconds--;
+        notifyListeners();
+      } else {
+        _isPostModeActive = false;
+        _postModeRemainingSeconds = 0;
+        timer.cancel();
+        notifyListeners();
+      }
+    });
+
+    notifyListeners();
+    return true;
+  }
+
   Future<void> cancelPostSession() async {
     await NativeShieldService.startPostMode(durationMinutes: 0);
     _isPostModeActive = false;

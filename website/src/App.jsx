@@ -22,10 +22,6 @@ import confetti from 'canvas-confetti';
 
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.inhibit.user';
 const GOOGLE_GROUP_URL = 'https://groups.google.com/g/skillup-1';
-const GITHUB_REPO = 'pavanstarkin-tech/inhibit-app';
-const FALLBACK_VERSION = 'v1.0.4';
-const FALLBACK_APK_URL = `https://github.com/${GITHUB_REPO}/releases/download/${FALLBACK_VERSION}/inhibit-${FALLBACK_VERSION}.apk`;
-const FALLBACK_RELEASE_URL = `https://github.com/${GITHUB_REPO}/releases/tag/${FALLBACK_VERSION}`;
 
 const PlayStoreIcon = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -42,51 +38,6 @@ const FacebookIcon = ({ size = 20, className = '' }) => (
 export default function App() {
   // Mobile Navigation State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Dynamic GitHub Release State (Always fetches latest live release & APK dynamically)
-  const [releaseInfo, setReleaseInfo] = useState({
-    version: FALLBACK_VERSION,
-    apkUrl: FALLBACK_APK_URL,
-    releaseUrl: FALLBACK_RELEASE_URL,
-    apkName: `inhibit-${FALLBACK_VERSION}.apk`,
-    publishedAt: null,
-    loading: true
-  });
-
-  useEffect(() => {
-    let isMounted = true;
-    const fetchLatestRelease = async () => {
-      try {
-        const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!isMounted || !data.tag_name) return;
-
-        const tag = data.tag_name;
-        const apkAsset = Array.isArray(data.assets) 
-          ? data.assets.find(a => a.name && a.name.toLowerCase().endsWith('.apk')) 
-          : null;
-
-        const apkUrl = apkAsset?.browser_download_url || `https://github.com/${GITHUB_REPO}/releases/download/${tag}/inhibit-${tag}.apk`;
-        const apkName = apkAsset?.name || `inhibit-${tag}.apk`;
-        const releaseUrl = data.html_url || `https://github.com/${GITHUB_REPO}/releases/tag/${tag}`;
-
-        setReleaseInfo({
-          version: tag,
-          apkUrl: apkUrl,
-          releaseUrl: releaseUrl,
-          apkName: apkName,
-          publishedAt: data.published_at,
-          loading: false
-        });
-      } catch (err) {
-        console.warn('GitHub dynamic release fetch fallback active:', err);
-      }
-    };
-
-    fetchLatestRelease();
-    return () => { isMounted = false; };
-  }, []);
 
   // Simulator State
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'shield' | 'profile'
@@ -1053,7 +1004,7 @@ export default function App() {
             <span className="neo-badge green" style={{ marginBottom: '10px' }}>OFFICIAL RELEASE</span>
             <h2 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 900, marginBottom: '12px' }}>Install Inhibit for Android</h2>
             <p style={{ fontSize: '15px', fontWeight: 700, color: '#555', maxWidth: '620px', margin: '0 auto 30px' }}>
-              Inhibit is published on the <strong>Google Play Store</strong> under Closed Testing with full Accessibility clearance. Install in 2 simple steps, or download the direct APK below!
+              Inhibit is published on the <strong>Google Play Store</strong> under Closed Testing with full Accessibility clearance. Follow the 2 simple steps below to install:
             </p>
 
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '36px', flexWrap: 'wrap' }}>
@@ -1078,15 +1029,6 @@ export default function App() {
                 <PlayStoreIcon size={18} />
                 <span>2. Open Google Play Store</span>
               </a>
-
-              <button 
-                onClick={() => setShowDownloadModal(true)}
-                className="neo-btn white"
-                style={{ fontSize: '15px', padding: '14px 22px' }}
-              >
-                <Download size={18} />
-                <span>Direct APK / Options</span>
-              </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', textAlign: 'left' }}>
@@ -1134,9 +1076,6 @@ export default function App() {
             <a href="./data-safety.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Safety</a>
             <a href="./data-deletion.html" style={{ color: '#000', textDecoration: 'underline' }}>Data Deletion</a>
             <a href="./accessibility.html" style={{ color: '#000', textDecoration: 'underline' }}>Accessibility Guide</a>
-            <a href="https://github.com/pavanstarkin-tech/inhibit-app" target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              GitHub <ExternalLink size={14} />
-            </a>
           </div>
 
           <div style={{ fontSize: '12px', fontWeight: 700, color: '#777' }}>
@@ -1162,12 +1101,12 @@ export default function App() {
               </div>
               <div>
                 <h3 style={{ fontSize: '20px', fontWeight: 900 }}>Get Inhibit for Android</h3>
-                <span className="neo-badge green" style={{ fontSize: '10px' }}>GOOGLE PLAY & APK AVAILABLE</span>
+                <span className="neo-badge green" style={{ fontSize: '10px' }}>GOOGLE PLAY STORE (CLOSED TESTING)</span>
               </div>
             </div>
 
             {/* Play Store 2-Step Card */}
-            <div style={{ padding: '14px', backgroundColor: '#fff', border: '2px solid #000', borderRadius: '10px', marginBottom: '14px', boxShadow: '2px 2px 0px #000' }}>
+            <div style={{ padding: '16px', backgroundColor: '#fff', border: '2px solid #000', borderRadius: '10px', marginBottom: '16px', boxShadow: '2px 2px 0px #000' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                 <span className="neo-badge yellow" style={{ fontSize: '10px' }}>RECOMMENDED</span>
                 <span style={{ fontWeight: 900, fontSize: '13px' }}>Google Play Store (Closed Testing)</span>
@@ -1195,34 +1134,6 @@ export default function App() {
                 >
                   <PlayStoreIcon size={16} />
                   <span>Step 2: Open on Google Play Store</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Direct APK Card */}
-            <div style={{ padding: '14px', backgroundColor: '#fff', border: '1.5px solid #000', borderRadius: '10px', marginBottom: '14px' }}>
-              <div style={{ fontWeight: 900, fontSize: '12px', color: '#333', marginBottom: '6px' }}>Alternative: Direct Standalone APK ({releaseInfo.version})</div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <a 
-                  href={releaseInfo.apkUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  download={releaseInfo.apkName}
-                  className="neo-btn green"
-                  style={{ padding: '10px 12px', flex: 1, textAlign: 'center', textDecoration: 'none', fontSize: '12px' }}
-                >
-                  <Download size={15} />
-                  <span>Download APK</span>
-                </a>
-                <a 
-                  href={releaseInfo.releaseUrl} 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="neo-btn white"
-                  style={{ padding: '10px 12px', flex: 1, textAlign: 'center', textDecoration: 'none', fontSize: '12px' }}
-                >
-                  <ExternalLink size={15} />
-                  <span>GitHub Releases</span>
                 </a>
               </div>
             </div>

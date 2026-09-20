@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import '../../core/services/app_state.dart';
 import '../../core/services/native_shield_service.dart';
 import '../../core/services/update_service.dart';
+import '../components/neo_button.dart';
 import '../components/neo_card.dart';
-import '../onboarding/onboarding_flow.dart';
 import '../theme/app_theme.dart';
 
 class SettingsMenuScreen extends StatefulWidget {
@@ -19,7 +19,11 @@ class SettingsMenuScreen extends StatefulWidget {
 }
 
 class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
-  String _installedVersion = '1.0.4';
+  String _installedVersion = '1.0.5';
+
+  static const String _ghBase = 'https://pavanstarkin-tech.github.io/inhibit/';
+  static const String _supportPhone = '+918639122823';
+  static const String _supportEmail = 'shesipavankumarswamy@gmail.com';
 
   @override
   void initState() {
@@ -79,90 +83,66 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
                   const SizedBox(width: 38), // balance back button
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
-              // Menu Options (Only System, About, & Policy settings - no duplicate bottom nav items)
+              // 1. Customer Support
               _buildMenuItem(
-                icon: Icons.system_update_alt_rounded,
+                icon: Icons.support_agent_rounded,
                 iconBg: AppTheme.accentYellow,
-                title: 'Check for Updates',
-                badgeText: widget.appState.isCheckingForUpdates
-                    ? 'Checking...'
-                    : (widget.appState.availableUpdate != null ? 'NEW V${widget.appState.availableUpdate!.latestVersion}' : 'GitHub Release'),
-                onTap: () => _handleCheckForUpdates(context),
+                title: 'Customer Support',
+                badgeText: 'Call & Email',
+                onTap: () => _showCustomerSupportDialog(context),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
+              // 2. Data and Security
               _buildMenuItem(
-                icon: Icons.settings_accessibility_rounded,
+                icon: Icons.security_rounded,
                 iconBg: AppTheme.accentGreen,
-                title: 'System Accessibility Settings',
-                badgeText: 'Android',
-                onTap: () async {
-                  await NativeShieldService.openAccessibilitySettings();
-                },
+                title: 'Data and Security',
+                badgeText: '100% On-Device',
+                onTap: () => NativeShieldService.openUrl('${_ghBase}data-safety.html'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
+              // 3. Privacy Policy
               _buildMenuItem(
-                icon: Icons.shop_two_outlined,
-                iconBg: AppTheme.accentYellow,
-                title: 'Google Play Store',
-                badgeText: 'Live Track',
-                onTap: () async {
-                  await NativeShieldService.openUrl(UpdateService.playStoreUrl);
-                },
-              ),
-              const SizedBox(height: 12),
-
-              _buildMenuItem(
-                icon: Icons.group_add_outlined,
+                icon: Icons.privacy_tip_outlined,
                 iconBg: const Color(0xFFBAE6FD),
-                title: 'Join Testing Group',
-                badgeText: 'Google Group',
-                onTap: () async {
-                  await NativeShieldService.openUrl(UpdateService.googleGroupUrl);
-                },
+                title: 'Privacy Policy',
+                onTap: () => NativeShieldService.openUrl('${_ghBase}privacy.html'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
+              // 4. Terms and Conditions
               _buildMenuItem(
-                icon: Icons.tour_outlined,
-                iconBg: const Color(0xFFC7D2FE),
-                title: 'Replay Welcome Tour',
-                badgeText: '5 steps',
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => Scaffold(
-                        body: OnboardingFlow(
-                          appState: widget.appState,
-                          onComplete: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                icon: Icons.gavel_outlined,
+                iconBg: const Color(0xFFFFD1DC),
+                title: 'Terms and Conditions',
+                onTap: () => NativeShieldService.openUrl('${_ghBase}terms.html'),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
+              // 5. Data Deletion
+              _buildMenuItem(
+                icon: Icons.delete_outline_rounded,
+                iconBg: const Color(0xFFFFC0CB),
+                title: 'Data Deletion',
+                badgeText: 'Policy',
+                onTap: () => NativeShieldService.openUrl('${_ghBase}data-deletion.html'),
+              ),
+              const SizedBox(height: 10),
+
+              // 6. About Us
               _buildMenuItem(
                 icon: Icons.info_outline_rounded,
-                iconBg: const Color(0xFFE2E8F0),
-                title: 'About Inhibit',
+                iconBg: const Color(0xFFC7D2FE),
+                title: 'About Us',
                 badgeText: 'v$_installedVersion',
-                onTap: () => _showAboutDialog(context),
-              ),
-              const SizedBox(height: 12),
-
-              _buildMenuItem(
-                icon: Icons.policy_outlined,
-                iconBg: const Color(0xFFFFD1DC),
-                title: 'Privacy Policy & Terms',
-                onTap: () => _showPrivacyPolicyDialog(context),
+                onTap: () => NativeShieldService.openUrl(_ghBase),
               ),
 
-              const SizedBox(height: 48),
+              const SizedBox(height: 36),
 
               // Bottom Branding Logo & Tagline
               Center(
@@ -251,91 +231,141 @@ class _SettingsMenuScreenState extends State<SettingsMenuScreen> {
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showCustomerSupportDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.bgMain,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: Colors.black, width: 3),
         ),
-        title: Text('Inhibit v$_installedVersion', style: const TextStyle(fontWeight: FontWeight.w900)),
-        content: Text(
-          'Inhibit v$_installedVersion runs a local, sandboxed, distraction-free engine directly on your device. Zero telemetry, zero cloud tracking, zero algorithms.\n\nSame social media. A better you.',
-          style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppTheme.accentYellow,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+              ),
+              child: const Icon(Icons.support_agent_rounded, color: Colors.black, size: 20),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Customer Support',
+              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'We are here to help! Reach out to us directly via Phone Call or Email.',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF444444), height: 1.3),
+            ),
+            const SizedBox(height: 14),
+
+            // Call Option Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+                boxShadow: AppTheme.hardShadow(offset: const Offset(3, 3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.phone_in_talk_rounded, color: Colors.black, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        'Direct Phone Call',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    _supportPhone,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: Color(0xFF15803D)),
+                  ),
+                  const SizedBox(height: 8),
+                  NeoButton(
+                    text: 'CALL NOW →',
+                    backgroundColor: AppTheme.accentGreen,
+                    textColor: Colors.black,
+                    height: 38,
+                    fontSize: 11,
+                    isFullWidth: true,
+                    onPressed: () {
+                      NativeShieldService.openUrl('tel:$_supportPhone');
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Email Option Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+                boxShadow: AppTheme.hardShadow(offset: const Offset(3, 3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.mail_outline_rounded, color: Colors.black, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        'Email Support',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Shesi Pavan Kumar Swamy',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF666666)),
+                  ),
+                  const Text(
+                    _supportEmail,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.black),
+                  ),
+                  const SizedBox(height: 8),
+                  NeoButton(
+                    text: 'SEND EMAIL →',
+                    backgroundColor: AppTheme.accentYellow,
+                    textColor: Colors.black,
+                    height: 38,
+                    fontSize: 11,
+                    isFullWidth: true,
+                    onPressed: () {
+                      NativeShieldService.openUrl('mailto:$_supportEmail?subject=Inhibit%20Support%20Request');
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('CLOSE', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleCheckForUpdates(BuildContext context) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Checking GitHub releases for updates...'),
-        duration: Duration(seconds: 2),
-      ),
-    );
-
-    final info = await widget.appState.checkForAppUpdates(manual: true);
-    if (!context.mounted) return;
-
-    if (info.hasUpdate) {
-      UpdateService.showUpdateDialog(
-        context: context,
-        update: info,
-        onDownload: () => NativeShieldService.openUrl(info.downloadUrl.isNotEmpty ? info.downloadUrl : info.releaseUrl),
-        onPlayStore: () => NativeShieldService.openUrl(UpdateService.playStoreUrl),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: AppTheme.bgMain,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Colors.black, width: 3),
-          ),
-          title: const Text('You\'re on the Latest Version', style: TextStyle(fontWeight: FontWeight.w900)),
-          content: Text(
-            'Inhibit v${info.currentVersion} is up to date.\nChecked against official GitHub releases.',
-            style: const TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('GREAT', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  void _showPrivacyPolicyDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.bgMain,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Colors.black, width: 3),
-        ),
-        title: const Text('Privacy & Terms', style: TextStyle(fontWeight: FontWeight.w900)),
-        content: const Text(
-          '1. Inhibit does not collect or transmit your personal data.\n2. All detection and shield rules execute entirely locally on your device.\n3. Accessibility service permissions are strictly used to intercept short-form doomscrolling loops (Reels & Shorts).\n4. You remain in full control of all shield rules at all times.',
-          style: TextStyle(fontSize: 13, height: 1.4, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('GOT IT', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
           ),
         ],
       ),

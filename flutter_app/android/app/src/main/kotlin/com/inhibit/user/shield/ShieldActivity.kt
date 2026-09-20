@@ -1,169 +1,258 @@
-﻿package com.inhibit.user.shield
+package com.inhibit.user.shield
 
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.ViewGroup
+import android.view.Window
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
-import com.inhibit.user.MainActivity
+import android.widget.Toast
 
 /**
- * Modern Neobrutalist Native Shield Screen.
+ * Modern Neobrutalist Life Dialog & Intentional Pass Interception.
  *
- * Appears over shielded native apps to redirect the user to Inhibit's clean browser
- * or safely return to their home screen.
+ * Appears directly over Instagram / YouTube when the user attempts to doomscroll beyond the 1st video.
+ * Gives the user the choice:
+ * 1. PROCEED with 1 of 4 free daily lives (if available).
+ * 2. REQUEST 30 MINS+ / 60 MINS+ (simulated payment unlock, especially after using 4/4 lives).
+ * 3. CLOSE & STOP SCROLLING: Safely returns to Chat / Feed / Home.
  */
 class ShieldActivity : Activity() {
 
+    private lateinit var guardController: GuardController
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        overridePendingTransition(0, 0)
         super.onCreate(savedInstanceState)
+        requestWindowFeature(Window.FEATURE_NO_TITLE)
+        
+        window.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            setDimAmount(0.65f)
+        }
+
+        guardController = GuardController(applicationContext)
 
         val blockedPkg = intent.getStringExtra(EXTRA_PACKAGE).orEmpty()
-        val serviceId = packageToServiceId(blockedPkg)
         val appName = friendlyName(blockedPkg)
+        val lives = guardController.getRemainingLives()
+        val hasFreeLives = lives > 0
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(Color.parseColor("#FFF8E7"))
-            setPadding(dp(24), dp(24), dp(24), dp(24))
-        }
-
-        // Neobrutalist Center Card
-        val card = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(20), dp(28), dp(20), dp(24))
-            background = GradientDrawable().apply {
-                setColor(Color.WHITE)
-                setStroke(dp(3), Color.BLACK)
-                cornerRadius = dp(12).toFloat()
+            setPadding(dp(20), dp(20), dp(20), dp(20))
+            setOnClickListener {
+                handleClose()
             }
         }
 
-        // Badge: "SHIELD ACTIVE"
+        // Neobrutalist Center Modal Card
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(dp(22), dp(24), dp(22), dp(20))
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#FFFDF7"))
+                setStroke(dp(3), Color.BLACK)
+                cornerRadius = dp(16).toFloat()
+            }
+            setOnClickListener {
+                // Prevent dismiss when clicking inside card
+            }
+        }
+
+        // 1. Badge / Hearts Indicator
+        val heartsText = if (hasFreeLives) {
+            val filled = "❤️ ".repeat(lives).trim()
+            val empty = "🤍 ".repeat(4 - lives).trim()
+            "$filled $empty".trim() + "  ($lives / 4 LIVES REMAINING)"
+        } else {
+            "💔 4 / 4 LIVES USED (0 LEFT TODAY)"
+        }
+
         val badge = TextView(this).apply {
-            text = "★ INHIBIT SHIELD"
-            textSize = 12f
+            text = heartsText
+            textSize = 11.5f
             setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
             setTextColor(Color.BLACK)
-            setPadding(dp(10), dp(4), dp(10), dp(4))
+            gravity = Gravity.CENTER
+            setPadding(dp(12), dp(6), dp(12), dp(6))
             background = GradientDrawable().apply {
-                setColor(Color.parseColor("#FFD93D"))
+                setColor(if (hasFreeLives) Color.parseColor("#FFE58F") else Color.parseColor("#FFA39E"))
                 setStroke(dp(2), Color.BLACK)
-                cornerRadius = dp(6).toFloat()
+                cornerRadius = dp(20).toFloat()
             }
         }
         card.addView(badge)
 
-        // Title
+        // 2. Title
         val title = TextView(this).apply {
-            text = "$appName IS SHIELDED".uppercase()
-            textSize = 22f
+            text = if (hasFreeLives) "DOOMSCROLL PAUSED 🛑" else "ALL 4 FREE LIVES USED ⏳"
+            textSize = 18f
             setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
             setTextColor(Color.BLACK)
             gravity = Gravity.CENTER
-            setPadding(0, dp(16), 0, dp(8))
+            setPadding(0, dp(14), 0, dp(6))
         }
         card.addView(title)
 
-        // Subtitle
-        val subtitle = TextView(this).apply {
-            text = "Use Inhibit for a calmer, distraction-free version with messages and friends — zero Reels, Shorts, or algorithmic traps."
+        // 3. Subtitle / Message
+        val message = TextView(this).apply {
+            text = if (hasFreeLives) {
+                "You've watched your 1 free preview on $appName.\n\nUse 1 of your $lives free daily lives to unlock 30 minutes of viewing."
+            } else {
+                "You've used all 4 of your daily free lives on $appName.\n\nRequest 30 minutes of intentional viewing for ₹10."
+            }
             textSize = 13f
-            setTextColor(Color.parseColor("#444444"))
+            setTextColor(Color.parseColor("#333333"))
             gravity = Gravity.CENTER
-            setPadding(0, 0, 0, dp(24))
+            setLineSpacing(0f, 1.25f)
+            setPadding(0, 0, 0, dp(18))
         }
-        card.addView(subtitle)
+        card.addView(message)
 
-        // Primary Button: Open Calm Version in NoScroll
-        val primaryBtn = Button(this).apply {
-            text = "OPEN CALMER $appName →".uppercase()
-            textSize = 13f
-            setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
-            setTextColor(Color.BLACK)
-            background = GradientDrawable().apply {
-                setColor(Color.parseColor("#7ED957"))
-                setStroke(dp(2), Color.BLACK)
-                cornerRadius = dp(8).toFloat()
-            }
-            setOnClickListener {
-                val launchIntent = Intent(this@ShieldActivity, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                    putExtra(MainActivity.EXTRA_LAUNCH_SERVICE, serviceId)
+        val buttonRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            weightSum = 2f
+        }
+
+        if (hasFreeLives) {
+            // Button 1: PROCEED (Use 1 Life)
+            val proceedBtn = Button(this).apply {
+                text = "PROCEED ➔"
+                textSize = 13f
+                setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
+                setTextColor(Color.BLACK)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#52C41A"))
+                    setStroke(dp(2), Color.BLACK)
+                    cornerRadius = dp(10).toFloat()
                 }
-                startActivity(launchIntent)
-                finish()
+                setOnClickListener {
+                    val success = guardController.consumeLife()
+                    val remaining = guardController.getRemainingLives()
+                    if (success) {
+                        Toast.makeText(this@ShieldActivity, "✨ 30 Minutes Unlocked! ($remaining lives left today)", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
             }
-        }
-        val btnParams = LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            dp(48),
-        ).apply { setMargins(0, 0, 0, dp(10)) }
-        card.addView(primaryBtn, btnParams)
+            val proceedParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                setMargins(0, 0, dp(6), 0)
+            }
+            buttonRow.addView(proceedBtn, proceedParams)
 
-        // Secondary Button: Return to Phone Home
-        val secondaryBtn = Button(this).apply {
-            text = "RETURN TO PHONE HOME".uppercase()
-            textSize = 12f
-            setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
-            setTextColor(Color.BLACK)
-            background = GradientDrawable().apply {
-                setColor(Color.parseColor("#FFF8E7"))
-                setStroke(dp(2), Color.BLACK)
-                cornerRadius = dp(8).toFloat()
+            // Button 2: CLOSE
+            val closeBtn = Button(this).apply {
+                text = "CLOSE ✕"
+                textSize = 13f
+                setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
+                setTextColor(Color.BLACK)
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    setStroke(dp(2), Color.BLACK)
+                    cornerRadius = dp(10).toFloat()
+                }
+                setOnClickListener {
+                    handleClose()
+                }
             }
-            setOnClickListener {
-                startActivity(
-                    Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_HOME)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    },
-                )
-                finish()
+            val closeParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                setMargins(dp(6), 0, 0, 0)
             }
-        }
-        card.addView(secondaryBtn, btnParams)
+            buttonRow.addView(closeBtn, closeParams)
+        } else {
+            // All 4 lives used: Show REQUEST 30M (₹10) and CLOSE in same row
+            val requestBtn = Button(this).apply {
+                text = "REQUEST (₹10) ⚡"
+                textSize = 12f
+                setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
+                setTextColor(Color.BLACK)
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#FFE58F"))
+                    setStroke(dp(2), Color.BLACK)
+                    cornerRadius = dp(10).toFloat()
+                }
+                setOnClickListener {
+                    showSimulatedPaymentDialog(30, 10)
+                }
+            }
+            val requestParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                setMargins(0, 0, dp(6), 0)
+            }
+            buttonRow.addView(requestBtn, requestParams)
 
-        // Tertiary Button: Temporary Unlock (15m)
-        val unlockBtn = Button(this).apply {
-            text = "TEMPORARY UNLOCK (15 MIN)".uppercase()
-            textSize = 11f
-            setTextColor(Color.parseColor("#666666"))
-            background = GradientDrawable().apply {
-                setColor(Color.TRANSPARENT)
+            // CLOSE
+            val closeBtn = Button(this).apply {
+                text = "CLOSE ✕"
+                textSize = 13f
+                setTypeface(Typeface.DEFAULT_BOLD, Typeface.BOLD)
+                setTextColor(Color.BLACK)
+                background = GradientDrawable().apply {
+                    setColor(Color.WHITE)
+                    setStroke(dp(2), Color.BLACK)
+                    cornerRadius = dp(10).toFloat()
+                }
+                setOnClickListener {
+                    handleClose()
+                }
             }
-            setOnClickListener {
-                val prefs = getSharedPreferences(ReelsBlockAccessibilityService.PREFS_NAME, Context.MODE_PRIVATE)
-                val unlockUntil = System.currentTimeMillis() + (15 * 60 * 1000L)
-                prefs.edit().putLong("unlock_${blockedPkg}", unlockUntil).apply()
-                finish()
+            val closeParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
+                setMargins(dp(6), 0, 0, 0)
             }
+            buttonRow.addView(closeBtn, closeParams)
         }
-        card.addView(unlockBtn, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(38)))
+
+        card.addView(buttonRow, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         root.addView(card, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         setContentView(root)
     }
 
+    private fun showSimulatedPaymentDialog(minutes: Int, amountInr: Int) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("💳 Inhibit UPI / Card Simulation")
+        builder.setMessage("Simulating payment of ₹$amountInr to unlock $minutes Minutes of unrestricted access...")
+        builder.setPositiveButton("Confirm ₹$amountInr & Unlock $minutes Mins") { dialog, _ ->
+            dialog.dismiss()
+            guardController.simulatePaymentUnlock(minutes)
+            Toast.makeText(this, "🎉 Payment of ₹$amountInr Successful! $minutes minutes unrestricted access activated.", Toast.LENGTH_LONG).show()
+            finish()
+        }
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.dismiss()
+        }
+        builder.setCancelable(false)
+        builder.show()
+    }
+
+    private fun handleClose() {
+        try {
+            ReelsBlockAccessibilityService.instance?.performSafeBack()
+        } catch (_: Exception) {}
+        finish()
+    }
+
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(0, 0)
+    }
+
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        startActivity(
-            Intent(Intent.ACTION_MAIN).apply {
-                addCategory(Intent.CATEGORY_HOME)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            },
-        )
-        finish()
+        handleClose()
     }
 
     private fun dp(value: Int): Int {
@@ -177,28 +266,12 @@ class ShieldActivity : Activity() {
     private fun friendlyName(pkg: String): String = when (pkg) {
         "com.instagram.android" -> "Instagram"
         "com.google.android.youtube" -> "YouTube"
-        "com.zhiliaoapp.musically", "com.ss.android.ugc.trill" -> "TikTok"
-        "com.twitter.android" -> "X"
-        "com.reddit.frontpage" -> "Reddit"
-        "com.facebook.katana" -> "Facebook"
-        "com.snapchat.android" -> "Snapchat"
-        "com.linkedin.android" -> "LinkedIn"
-        else -> "This App"
-    }
-
-    private fun packageToServiceId(pkg: String): String = when (pkg) {
-        "com.instagram.android" -> "instagram"
-        "com.google.android.youtube" -> "youtube"
-        "com.zhiliaoapp.musically", "com.ss.android.ugc.trill" -> "tiktok"
-        "com.twitter.android" -> "x"
-        "com.reddit.frontpage" -> "reddit"
-        "com.facebook.katana" -> "facebook"
-        "com.snapchat.android" -> "snapchat"
-        "com.linkedin.android" -> "linkedin"
-        else -> "instagram"
+        else -> "this app"
     }
 
     companion object {
         const val EXTRA_PACKAGE = "app.noscroll.blockedPackage"
+        const val EXTRA_REMAINING_LIVES = "app.noscroll.remainingLives"
+        const val EXTRA_TOTAL_BLOCKED = "app.noscroll.totalBlocked"
     }
 }
