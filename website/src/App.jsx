@@ -29,6 +29,16 @@ const PlayStoreIcon = ({ size = 20, className = '' }) => (
   </svg>
 );
 
+const ChromeIcon = ({ size = 20, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="4" />
+    <line x1="21.17" y1="8" x2="12" y2="8" />
+    <line x1="3.95" y1="6.06" x2="8.54" y2="14" />
+    <line x1="10.88" y1="21.94" x2="15.46" y2="14" />
+  </svg>
+);
+
 const FacebookIcon = ({ size = 20, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -38,6 +48,63 @@ const FacebookIcon = ({ size = 20, className = '' }) => (
 export default function App() {
   // Mobile Navigation State
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // In-App Browser (Instagram, Facebook, etc.) Detection
+  const [inAppBrowser, setInAppBrowser] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      const isIab = /Instagram|FBAN|FBAV|Twitter|Snapchat|LinkedIn|ByteLocale/i.test(ua);
+      const isAndr = /Android/i.test(ua);
+      setInAppBrowser(isIab);
+      setIsAndroid(isAndr);
+    }
+  }, []);
+
+  const openWebsiteInChrome = () => {
+    if (typeof window === 'undefined') return;
+    const cleanUrl = window.location.href.replace(/^https?:\/\//, '');
+    const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+    window.location.href = chromeIntent;
+  };
+
+  const handleOpenGoogleGroup = (e) => {
+    if (e) e.preventDefault();
+    if (isAndroid) {
+      // Direct intent to launch Google Chrome so the user is logged into their Google account
+      const chromeIntent = 'intent://groups.google.com/g/skillup-1#Intent;scheme=https;package=com.android.chrome;end';
+      window.location.href = chromeIntent;
+      setTimeout(() => {
+        const viewIntent = 'intent://groups.google.com/g/skillup-1#Intent;scheme=https;action=android.intent.action.VIEW;end';
+        window.location.href = viewIntent;
+      }, 700);
+      setTimeout(() => {
+        window.open(GOOGLE_GROUP_URL, '_blank');
+      }, 1500);
+    } else {
+      window.open(GOOGLE_GROUP_URL, '_blank');
+    }
+  };
+
+  const handleOpenPlayStore = (e) => {
+    if (e) e.preventDefault();
+    if (isAndroid) {
+      // Direct Native Play Store App URI
+      const marketUri = 'market://details?id=com.inhibit.user';
+      window.location.href = marketUri;
+      setTimeout(() => {
+        const playIntent = 'intent://details?id=com.inhibit.user#Intent;scheme=market;package=com.android.vending;end';
+        window.location.href = playIntent;
+      }, 600);
+      setTimeout(() => {
+        window.open(PLAY_STORE_URL, '_blank');
+      }, 1500);
+    } else {
+      window.open(PLAY_STORE_URL, '_blank');
+    }
+  };
 
   // Simulator State
   const [activeTab, setActiveTab] = useState('home'); // 'home' | 'shield' | 'profile'
@@ -111,6 +178,24 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* 0. INSTAGRAM / IN-APP BROWSER ALERT BANNER */}
+      {inAppBrowser && isAndroid && (
+        <div style={{ backgroundColor: '#FFE58F', borderBottom: '2.5px solid #000', padding: '10px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', zIndex: 60 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 800 }}>
+            <span>⚠️ <strong>Instagram browser detected:</strong></span>
+            <span style={{ fontWeight: 600 }}>Switch to Google Chrome so you are logged into your Google Play account for closed testing access.</span>
+          </div>
+          <button 
+            onClick={openWebsiteInChrome}
+            className="neo-btn green"
+            style={{ padding: '6px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <ChromeIcon size={15} />
+            <span>Open in Chrome ➔</span>
+          </button>
+        </div>
+      )}
+
       {/* 1. TOP ANNOUNCEMENT BAR (INFINITE MARQUEE STRIP) */}
       <div className="top-marquee-container" title="Get Inhibit on Google Play" onClick={() => setShowDownloadModal(true)}>
         <div className="top-marquee-track">
@@ -255,6 +340,7 @@ export default function App() {
 
               <a 
                 href={GOOGLE_GROUP_URL}
+                onClick={handleOpenGoogleGroup}
                 target="_blank"
                 rel="noreferrer"
                 className="neo-btn white"
@@ -1010,6 +1096,7 @@ export default function App() {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '14px', marginBottom: '36px', flexWrap: 'wrap' }}>
               <a 
                 href={GOOGLE_GROUP_URL} 
+                onClick={handleOpenGoogleGroup}
                 target="_blank" 
                 rel="noreferrer"
                 className="neo-btn"
@@ -1021,6 +1108,7 @@ export default function App() {
 
               <a 
                 href={PLAY_STORE_URL} 
+                onClick={handleOpenPlayStore}
                 target="_blank" 
                 rel="noreferrer"
                 className="neo-btn"
@@ -1035,12 +1123,12 @@ export default function App() {
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 1</div>
                 <div style={{ fontWeight: 900, fontSize: '14px' }}>Join Google Group</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Join <a href={GOOGLE_GROUP_URL} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>skillup-1 Google Group</a> with your Google Play email.</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Join <a href={GOOGLE_GROUP_URL} onClick={handleOpenGoogleGroup} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>skillup-1 Google Group</a> with your Google Play email.</p>
               </div>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 2</div>
                 <div style={{ fontWeight: 900, fontSize: '14px' }}>Install from Play Store</div>
-                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Open <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>Play Store Listing</a> to download the verified app.</p>
+                <p style={{ fontSize: '12px', fontWeight: 700, color: '#555', marginTop: '4px' }}>Open <a href={PLAY_STORE_URL} onClick={handleOpenPlayStore} target="_blank" rel="noreferrer" style={{ color: '#000', fontWeight: 800 }}>Play Store Listing</a> to download the verified app.</p>
               </div>
               <div style={{ padding: '16px', backgroundColor: '#FFFDF0', borderRadius: '10px', border: '2px solid #000' }}>
                 <div style={{ fontWeight: 900, fontSize: '11px', color: '#666', marginBottom: '4px' }}>STEP 3</div>
@@ -1064,10 +1152,10 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontWeight: 800, fontSize: '13px', flexWrap: 'wrap' }}>
-            <a href={PLAY_STORE_URL} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <a href={PLAY_STORE_URL} onClick={handleOpenPlayStore} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               Google Play <ExternalLink size={14} />
             </a>
-            <a href={GOOGLE_GROUP_URL} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <a href={GOOGLE_GROUP_URL} onClick={handleOpenGoogleGroup} target="_blank" rel="noreferrer" style={{ color: '#000', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
               Testing Group <ExternalLink size={14} />
             </a>
             <a href="./privacy.html" style={{ color: '#000', textDecoration: 'underline' }}>Privacy Policy</a>
@@ -1105,6 +1193,23 @@ export default function App() {
               </div>
             </div>
 
+            {/* Instagram / In-App Browser Helper inside Modal */}
+            {inAppBrowser && isAndroid && (
+              <div style={{ padding: '12px 14px', backgroundColor: '#FFFBE6', border: '2px dashed #FAAD14', borderRadius: '10px', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <div style={{ fontSize: '12px', fontWeight: 800, color: '#873800', lineHeight: 1.3 }}>
+                  ⚠️ Instagram in-app browser has no Google account login.
+                </div>
+                <button 
+                  onClick={openWebsiteInChrome}
+                  className="neo-btn green"
+                  style={{ padding: '8px 12px', fontSize: '11px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px' }}
+                >
+                  <ChromeIcon size={14} />
+                  <span>Open in Chrome</span>
+                </button>
+              </div>
+            )}
+
             {/* Play Store 2-Step Card */}
             <div style={{ padding: '16px', backgroundColor: '#fff', border: '2px solid #000', borderRadius: '10px', marginBottom: '16px', boxShadow: '2px 2px 0px #000' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
@@ -1117,6 +1222,7 @@ export default function App() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <a 
                   href={GOOGLE_GROUP_URL} 
+                  onClick={handleOpenGoogleGroup}
                   target="_blank" 
                   rel="noreferrer"
                   className="neo-btn"
@@ -1127,6 +1233,7 @@ export default function App() {
                 </a>
                 <a 
                   href={PLAY_STORE_URL} 
+                  onClick={handleOpenPlayStore}
                   target="_blank" 
                   rel="noreferrer"
                   className="neo-btn"
