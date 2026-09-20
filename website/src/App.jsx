@@ -56,10 +56,17 @@ export default function App() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const ua = navigator.userAgent || navigator.vendor || window.opera || '';
-      const isIab = /Instagram|FBAN|FBAV|Twitter|Snapchat|LinkedIn|ByteLocale/i.test(ua);
+      const isIab = /Instagram|FBAN|FBAV|Twitter|Snapchat|LinkedIn|ByteLocale|musical_ly|TikTok/i.test(ua);
       const isAndr = /Android/i.test(ua);
       setInAppBrowser(isIab);
       setIsAndroid(isAndr);
+
+      // If opened in an Android in-app browser (e.g. Instagram story), automatically open in Chrome
+      if (isIab && isAndr) {
+        const cleanUrl = window.location.href.replace(/^https?:\/\//, '');
+        const chromeIntent = `intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+        window.location.href = chromeIntent;
+      }
     }
   }, []);
 
@@ -172,30 +179,120 @@ export default function App() {
     }
   };
 
+  const [dismissTakeover, setDismissTakeover] = useState(false);
+
   // Calculate savings
   const yearlyHoursSaved = Math.round(dailyHours * 365);
   const lifetimeYearsGained = ((dailyHours * 365 * 60) / (24 * 365)).toFixed(1);
 
-  return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {/* 0. INSTAGRAM / IN-APP BROWSER ALERT BANNER */}
-      {inAppBrowser && isAndroid && (
-        <div style={{ backgroundColor: '#FFE58F', borderBottom: '2.5px solid #000', padding: '10px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', zIndex: 60 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 800 }}>
-            <span>⚠️ <strong>Instagram browser detected:</strong></span>
-            <span style={{ fontWeight: 600 }}>Switch to Google Chrome so you are logged into your Google Play account for closed testing access.</span>
+  // Full screen takeover for Instagram / in-app browsers on Android
+  if (inAppBrowser && isAndroid && !dismissTakeover) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        width: '100vw',
+        backgroundColor: '#FFFDF0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        boxSizing: 'border-box'
+      }}>
+        <div className="neo-card" style={{
+          maxWidth: '480px',
+          width: '100%',
+          backgroundColor: '#FFFFFF',
+          padding: '36px 24px',
+          textAlign: 'center',
+          boxShadow: '6px 6px 0px #000'
+        }}>
+          {/* Top badge */}
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', backgroundColor: '#FFE58F', border: '2px solid #000', borderRadius: '999px', fontSize: '11px', fontWeight: 900, marginBottom: '24px', textTransform: 'uppercase' }}>
+            <span>⚠️ Instagram Browser Detected</span>
           </div>
-          <button 
+
+          {/* Chrome Icon Display */}
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '22px' }}>
+            <div style={{ width: '72px', height: '72px', borderRadius: '18px', backgroundColor: 'var(--accent-yellow)', border: '2.5px solid #000', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '4px 4px 0px #000' }}>
+              <ChromeIcon size={42} />
+            </div>
+          </div>
+
+          <h1 style={{ fontSize: '24px', fontWeight: 900, lineHeight: 1.25, marginBottom: '12px' }}>
+            Open in Google Chrome
+          </h1>
+
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#555', lineHeight: 1.5, marginBottom: '24px' }}>
+            Instagram's in-app browser does not support Google sign-in. Please open this page in Google Chrome to join the testing group and get Inhibit on Google Play.
+          </p>
+
+          {/* Primary Action Button */}
+          <button
             onClick={openWebsiteInChrome}
             className="neo-btn green"
-            style={{ padding: '6px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{
+              width: '100%',
+              padding: '16px 20px',
+              fontSize: '16px',
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              marginBottom: '14px',
+              backgroundColor: 'var(--accent-green)',
+              cursor: 'pointer'
+            }}
           >
-            <ChromeIcon size={15} />
-            <span>Open in Chrome ➔</span>
+            <ChromeIcon size={20} />
+            <span>Open in Google Chrome</span>
+          </button>
+
+          {/* Direct Google Play Store app button */}
+          <button
+            onClick={handleOpenPlayStore}
+            className="neo-btn"
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              fontSize: '14px',
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              marginBottom: '20px',
+              backgroundColor: 'var(--accent-yellow)',
+              cursor: 'pointer'
+            }}
+          >
+            <PlayStoreIcon size={18} />
+            <span>Open in Play Store App Directly</span>
+          </button>
+
+          {/* Dismiss button */}
+          <button
+            onClick={() => setDismissTakeover(true)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#777',
+              fontSize: '13px',
+              fontWeight: 800,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              padding: '8px'
+            }}
+          >
+            Continue viewing website in Instagram browser →
           </button>
         </div>
-      )}
+      </div>
+    );
+  }
 
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* 1. TOP ANNOUNCEMENT BAR (INFINITE MARQUEE STRIP) */}
       <div className="top-marquee-container" title="Get Inhibit on Google Play" onClick={() => setShowDownloadModal(true)}>
         <div className="top-marquee-track">
