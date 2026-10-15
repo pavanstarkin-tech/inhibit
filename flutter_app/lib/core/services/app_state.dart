@@ -378,11 +378,11 @@ class AppState extends ChangeNotifier {
     return true;
   }
 
+  // Payment option commented out / disabled: Only the 4 daily free lives are permitted.
+  // Kept as no-op/fallback so no external callers break, but all payment UI options have been removed.
   Future<bool> startPostSessionWithPayment({int durationMinutes = 30}) async {
-    await NativeShieldService.simulatePaymentUnlock();
-    await NativeShieldService.startPostMode(durationMinutes: durationMinutes);
-    await syncPostModeState();
-    return true;
+    // Payment disabled: user cannot buy extra time beyond the 4 daily lives.
+    return false;
   }
 
   Future<void> cancelPostSession() async {

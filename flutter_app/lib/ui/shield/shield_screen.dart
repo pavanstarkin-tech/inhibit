@@ -268,7 +268,7 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
               Text(
                 hasFreeLives
                     ? 'Get 4 daily unlocks to create and post content without distraction deflection.'
-                    : 'You have used all 4 daily lives for today. Request extra time below.',
+                    : 'You have used all 4 daily lives for today. No extra unlocks available until tomorrow.',
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -318,6 +318,8 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
               onPressed: () => _handleUnlockPostSession(context),
             ),
           ] else ...[
+            // Payment option commented out: Only 4 daily lives allowed per user, no paid excuses/extra unlocks.
+            /*
             // When 4 of 4 completed: Provide Request 30 Mins+ (₹10) and Request 60 Mins+ (₹20)
             NeoButton(
               text: '⚡ REQUEST 30 MINS+ (₹10)',
@@ -337,6 +339,25 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
               height: 42,
               fontSize: 12,
               onPressed: () => _showSimulatedPaymentDialog(context, durationMinutes: 60, amountRupees: 20),
+            ),
+            */
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.borderBlack, width: 2),
+              ),
+              child: const Text(
+                'All 4 free lives used today. Take a break! No extra unlocks are available until tomorrow.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF4B5563),
+                ),
+              ),
             ),
           ],
         ],
@@ -534,6 +555,8 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
     );
   }
 
+  // Payment option commented out: Only 4 daily lives allowed per user, no paid excuses/extra unlocks.
+  /*
   void _showSimulatedPaymentDialog(BuildContext context, {required int durationMinutes, required int amountRupees}) {
     showDialog(
       context: context,
@@ -645,4 +668,5 @@ class _ShieldScreenState extends State<ShieldScreen> with WidgetsBindingObserver
       ),
     );
   }
+  */
 }

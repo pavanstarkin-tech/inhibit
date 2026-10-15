@@ -402,8 +402,8 @@ class ReelsBlockAccessibilityService : AccessibilityService() {
 
     /**
      * Presents the Interception Dialog (ShieldActivity) to give the user the choice:
-     * - Proceed (Use 1 of 4 free lives or pay ₹10 to unlock 30 minutes)
-     * - Close (Trigger back action to stop scrolling)
+     * - Proceed (Use 1 of 4 free lives to unlock 30 minutes)
+     * - Close (Trigger back action to stop scrolling; no paid unlocks or excuses)
      */
     private fun redirectToHomeTab(pkg: String, currentScreen: Screen, message: String, totalBlocked: Int) {
         if (exitInProgress) {

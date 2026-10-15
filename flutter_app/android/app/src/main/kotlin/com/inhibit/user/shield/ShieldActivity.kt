@@ -24,8 +24,7 @@ import android.widget.Toast
  * Appears directly over Instagram / YouTube when the user attempts to doomscroll beyond the 1st video.
  * Gives the user the choice:
  * 1. PROCEED with 1 of 4 free daily lives (if available).
- * 2. REQUEST 30 MINS+ / 60 MINS+ (simulated payment unlock, especially after using 4/4 lives).
- * 3. CLOSE & STOP SCROLLING: Safely returns to Chat / Feed / Home.
+ * 2. CLOSE & STOP SCROLLING: Safely returns to Chat / Feed / Home (only 4 free lives allowed, no paid unlocks or excuses).
  */
 class ShieldActivity : Activity() {
 
@@ -113,7 +112,7 @@ class ShieldActivity : Activity() {
             text = if (hasFreeLives) {
                 "You've watched your 1 free preview on $appName.\n\nUse 1 of your $lives free daily lives to unlock 30 minutes of viewing."
             } else {
-                "You've used all 4 of your daily free lives on $appName.\n\nRequest 30 minutes of intentional viewing for ₹10."
+                "You've used all 4 of your daily free lives on $appName.\n\nTake a break! No extra unlocks are available today."
             }
             textSize = 13f
             setTextColor(Color.parseColor("#333333"))
@@ -174,7 +173,8 @@ class ShieldActivity : Activity() {
             }
             buttonRow.addView(closeBtn, closeParams)
         } else {
-            // All 4 lives used: Show REQUEST 30M (₹10) and CLOSE in same row
+            // All 4 lives used: Payment option commented out - only 4 lives allowed, no paid excuses/extra unlocks.
+            /*
             val requestBtn = Button(this).apply {
                 text = "REQUEST (₹10) ⚡"
                 textSize = 12f
@@ -193,8 +193,9 @@ class ShieldActivity : Activity() {
                 setMargins(0, 0, dp(6), 0)
             }
             buttonRow.addView(requestBtn, requestParams)
+            */
 
-            // CLOSE
+            // CLOSE ONLY
             val closeBtn = Button(this).apply {
                 text = "CLOSE ✕"
                 textSize = 13f
@@ -209,9 +210,7 @@ class ShieldActivity : Activity() {
                     handleClose()
                 }
             }
-            val closeParams = LinearLayout.LayoutParams(0, dp(46), 1f).apply {
-                setMargins(dp(6), 0, 0, 0)
-            }
+            val closeParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46))
             buttonRow.addView(closeBtn, closeParams)
         }
 
@@ -221,6 +220,8 @@ class ShieldActivity : Activity() {
         setContentView(root)
     }
 
+    // Payment option commented out: Only 4 lives are allowed per user, no paid excuses/extra unlocks.
+    /*
     private fun showSimulatedPaymentDialog(minutes: Int, amountInr: Int) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("💳 Inhibit UPI / Card Simulation")
@@ -237,6 +238,7 @@ class ShieldActivity : Activity() {
         builder.setCancelable(false)
         builder.show()
     }
+    */
 
     private fun handleClose() {
         try {
